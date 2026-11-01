@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3f6ef7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>破晓 · 数学理综7天速成</title>
+<style>
+:root{
+  --bg:#f4f5fb; --card:#ffffff; --txt:#20233a; --sub:#7a809a; --pri:#3f6ef7; --pri2:#7c9cff;
+  --ok:#16a34a; --bad:#e11d48; --warn:#d97706; --line:#e7e9f4; --chip:#eef0fa; --chipOn:#3f6ef7;
+  --shadow:0 2px 12px rgba(40,44,90,.07); --radius:16px;
+  --cm:#3b82f6; --cp:#8b5cf6; --cc:#10b981; --cb:#f59e0b;
+}
+body.dark{
+  --bg:#11131c; --card:#1b1e2b; --txt:#e9ebf5; --sub:#9aa0b8; --pri:#7c9cff; --pri2:#a5b8ff;
+  --ok:#4ade80; --bad:#fb7185; --warn:#fbbf24; --line:#2a2e42; --chip:#242838; --chipOn:#7c9cff;
+  --shadow:0 2px 12px rgba(0,0,0,.35);
+  --cm:#60a5fa; --cp:#a78bfa; --cc:#34d399; --cb:#fbbf24;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--txt);font-size:15px;line-height:1.65;
+  padding-bottom:calc(74px + env(safe-area-inset-bottom));transition:background .25s;
+}
+b{color:var(--pri)}
+header{position:sticky;top:0;z-index:50;background:var(--bg);padding:10px 14px 6px;transition:background .25s}
+.hrow{display:flex;align-items:center;gap:10px}
+.hlogo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#4a55c9,#ff9a5c);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:var(--shadow)}
+.htitle{font-size:17px;font-weight:800;letter-spacing:.5px}
+.hsub{font-size:11.5px;color:var(--sub)}
+.iconbtn{margin-left:auto;width:40px;height:40px;border-radius:12px;border:none;background:var(--card);color:var(--txt);font-size:18px;box-shadow:var(--shadow);cursor:pointer}
+main{max-width:760px;margin:0 auto;padding:8px 14px 30px}
+.tab{display:none;animation:fade .22s ease}
+.tab.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px 16px;margin-bottom:12px}
+.secTitle{font-size:13px;font-weight:800;color:var(--sub);margin:18px 2px 8px;letter-spacing:1px}
+.muted{color:var(--sub);font-size:12.5px}
+/* ---- home ---- */
+.hero{position:relative;overflow:hidden;background:linear-gradient(160deg,#232a54 0%,#4a55c9 58%,#ff9a5c 128%);color:#fff;border-radius:20px;padding:0}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,200,120,.55),rgba(255,200,120,0) 68%)}
+.heroInner{position:relative;z-index:2;padding:26px 16px 15px}
+.hero .heroTitle{font-size:30px;font-weight:900;letter-spacing:8px}
+.hero .heroSub{font-size:12.5px;opacity:.92;margin-top:6px;line-height:1.7}
+.hero b{color:#fff}
+.statsRow{display:flex;gap:8px;margin-top:12px}
+.stat{flex:1;background:rgba(255,255,255,.16);border-radius:12px;padding:8px 4px;text-align:center}
+.stat .n{font-size:17px;font-weight:900}
+.stat .l{font-size:10.5px;opacity:.9}
+.progWrap{margin-top:13px}
+.progBar{height:9px;background:rgba(255,255,255,.25);border-radius:9px;overflow:hidden}
+.progBar i{display:block;height:100%;width:0;background:#fff;border-radius:9px;transition:width .4s}
+.progTxt{font-size:11.5px;opacity:.95;margin-top:5px}
+.dayGrid{display:grid;grid-template-columns:1fr;gap:10px}
+.dayCard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:13px 15px;cursor:pointer;border:1px solid transparent;transition:transform .12s}
+.dayCard:active{transform:scale(.985)}
+.dcTop{display:flex;align-items:center;gap:8px}
+.dcDay{font-weight:900;font-size:15px;color:var(--pri)}
+.dcTag{font-size:10.5px;background:var(--chip);color:var(--sub);border-radius:20px;padding:1px 8px}
+.dcTitle{font-size:13px;color:var(--sub);margin-top:2px;flex:1}
+.dcBar{height:6px;background:var(--chip);border-radius:6px;overflow:hidden;margin-top:9px}
+.dcBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pri),var(--pri2));border-radius:6px;transition:width .4s}
+.dcBtns{display:flex;gap:8px;margin-top:10px}
+.dcBtns button{flex:1;border:none;border-radius:10px;padding:8px 0;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--chip);color:var(--txt)}
+.dcBtns button.p{background:var(--pri);color:#fff}
+.btn{display:block;width:100%;border:none;border-radius:12px;padding:12px;font-size:14.5px;font-weight:700;cursor:pointer;background:var(--pri);color:#fff;margin-top:10px}
+.btn.danger{background:var(--bad)}
+/* ---- splash ---- */
+#splash{position:fixed;inset:0;z-index:999;display:none;background:linear-gradient(165deg,#171a2b 0%,#3b3f8f 55%,#ff9a5c 130%);opacity:1;transition:opacity .45s}
+#splash.show{display:block}
+#splash .splashTxt{position:absolute;left:0;right:0;bottom:16%;text-align:center;z-index:2}
+#splash .st1{font-size:34px;font-weight:900;color:#fff;letter-spacing:10px}
+#splash .st3{font-size:12px;color:#cfd3e6;letter-spacing:7px;margin-top:8px;font-weight:600}
+#splash .st2{font-size:13px;color:#cfd3e6;margin-top:10px;letter-spacing:1px}
+/* ---- chips ---- */
+.filters{position:sticky;top:58px;z-index:40;background:var(--bg);padding:6px 0 8px}
+.frow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px;align-items:center}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:20px;padding:5px 12px;font-size:12.5px;cursor:pointer;font-weight:600;transition:all .15s}
+.chip.on{background:var(--chipOn);border-color:var(--chipOn);color:#fff}
+.chip.hf.on{background:var(--warn);border-color:var(--warn)}
+#searchBox{flex:1;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 13px;font-size:13.5px;color:var(--txt);outline:none}
+#searchBox:focus{border-color:var(--pri)}
+.wprog{font-size:12px;color:var(--sub);margin:2px 2px 10px}
+.wprog b{color:var(--ok)}
+.wprog .r{color:var(--bad)}
+/* ---- card ---- */
+#cardArea{position:relative}
+.wcard{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 16px;text-align:center;min-height:320px;display:flex;flex-direction:column;animation:cardin .25s ease}
+@keyframes cardin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.wmeta{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:wrap}
+.badge{font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 9px;background:var(--chip);color:var(--sub)}
+.badge.b-math{background:rgba(59,130,246,.15);color:var(--cm)}
+.badge.b-phy{background:rgba(139,92,246,.15);color:var(--cp)}
+.badge.b-chem{background:rgba(16,185,129,.15);color:var(--cc)}
+.badge.b-bio{background:rgba(245,158,11,.18);color:var(--cb)}
+.badge.hf{background:#fef3c7;color:#b45309}
+body.dark .badge.hf{background:#3d2c08;color:#fcd34d}
+.badge.rev{background:#dcfce7;color:#15803d}
+body.dark .badge.rev{background:#0d2f1a;color:#86efac}
+.widx{font-size:11px;color:var(--sub);margin-left:auto}
+.wnum{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:10px}
+.warrow{border:none;background:var(--chip);color:var(--sub);width:32px;height:32px;border-radius:50%;font-size:15px;cursor:pointer;flex:none}
+.word{font-size:23px;font-weight:900;letter-spacing:.5px;margin:4px 0 2px;cursor:pointer;word-break:break-word;line-height:1.5}
+.phone{font-size:12px;color:var(--sub);margin-top:4px}
+.mean{margin:14px auto 0;font-size:15px;font-weight:600;max-width:600px;cursor:pointer;min-height:96px;display:flex;align-items:center;justify-content:center;padding:12px 14px;border-radius:14px;border:1.5px dashed var(--line);transition:filter .2s,opacity .2s;flex-wrap:wrap;line-height:1.95;text-align:left}
+.mean.blur{filter:blur(7px);opacity:.55;user-select:none}
+.mean.hide{color:var(--sub);font-weight:600;letter-spacing:2px}
+.mean .hint{font-size:12px;color:var(--sub);font-weight:500;letter-spacing:0}
+.sentBox{margin-top:10px}
+.sentToggle{border:none;background:none;color:var(--pri);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px}
+.sent{font-size:13.5px;color:var(--txt);background:var(--chip);border-radius:12px;padding:10px 12px;margin-top:4px;text-align:left;line-height:1.7}
+.acts{display:flex;gap:9px;margin-top:auto;padding-top:16px}
+.acts button{flex:1;border:none;border-radius:14px;padding:13px 0;font-size:14.5px;font-weight:800;cursor:pointer;transition:transform .1s}
+.acts button:active{transform:scale(.97)}
+.actBad{background:var(--bad);color:#fff}
+.actSkip{background:var(--chip);color:var(--sub);flex:.7!important}
+.actOk{background:var(--ok);color:#fff}
+.acts button.sel{outline:3px solid rgba(120,120,220,.35)}
+.acts button.actGo{background:var(--pri);color:#fff}
+/* ---- list ---- */
+.lrow{display:flex;align-items:flex-start;gap:10px;background:var(--card);border-radius:13px;padding:10px 12px;margin-bottom:7px;box-shadow:var(--shadow);cursor:pointer}
+.lmain{flex:1;min-width:0}
+.len{font-weight:800;font-size:15px}
+.ltag{font-size:10.5px;color:var(--sub);margin-left:6px;font-weight:500}
+.lzh{font-size:13px;margin-top:2px;transition:filter .18s,opacity .18s;word-break:break-word;line-height:1.8}
+.lzh.blur{filter:blur(5px);opacity:.5}
+.lzh.hide{color:var(--sub)}
+.lbtns{display:flex;flex-direction:column;gap:5px}
+.lbtns button{border:none;width:34px;height:30px;border-radius:9px;font-size:13px;cursor:pointer;background:var(--chip);color:var(--sub)}
+.lbtns button.ok.on{background:var(--ok);color:#fff}
+.lbtns button.bad.on{background:var(--bad);color:#fff}
+.moreBtn{display:block;width:100%;border:1.5px dashed var(--line);background:none;color:var(--sub);border-radius:12px;padding:10px;font-size:13px;cursor:pointer;margin-top:4px}
+/* ---- lect ---- */
+.gdayHead{background:linear-gradient(135deg,var(--pri),var(--pri2));border-radius:18px;color:#fff;padding:14px 16px;margin-bottom:12px}
+.gdayHead .t{font-size:17px;font-weight:900}
+.gdayHead .s{font-size:12px;opacity:.92;margin-top:2px}
+.gdayHead b{color:#fff}
+.subjHead{display:flex;align-items:center;gap:8px;margin:18px 2px 9px;font-weight:800;font-size:14.5px}
+.sdot{width:10px;height:10px;border-radius:3px;flex:none}
+.sdot.b-math{background:var(--cm)} .sdot.b-phy{background:var(--cp)} .sdot.b-chem{background:var(--cc)} .sdot.b-bio{background:var(--cb)}
+.subjHead .ssub{font-size:11.5px;color:var(--sub);font-weight:500;margin-left:auto;text-align:right}
+.gcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:11px;overflow:hidden}
+.gh{display:flex;align-items:center;gap:8px;padding:13px 15px;cursor:pointer;user-select:none}
+.gh .t{font-size:14.5px;font-weight:800;flex:1}
+.gh .arrow{color:var(--sub);font-size:12px;transition:transform .2s}
+.gcard.open .gh .arrow{transform:rotate(90deg)}
+.gdone{border:1.5px solid var(--line);background:none;border-radius:20px;color:var(--sub);font-size:11px;padding:3px 9px;cursor:pointer;white-space:nowrap}
+.gdone.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.gb{display:none;padding:0 15px 4px;font-size:13.5px;line-height:1.85}
+.gcard.open .gb{display:block}
+.gex{display:none;margin:8px 0 0;padding:0 15px}
+.gcard.open .gex{display:block}
+.gex .ex{background:var(--chip);border-left:3px solid var(--pri);border-radius:0 10px 10px 0;padding:8px 11px;margin-bottom:7px;font-size:13px;line-height:1.8}
+.gex .ex .zh{color:var(--sub);font-size:12px;margin-top:1px}
+.gtips{margin:9px 15px 13px;background:#fff8e6;border-radius:10px;padding:9px 12px;font-size:12.5px;color:#8a5a00;line-height:1.7}
+body.dark .gtips{background:#33290e;color:#fcd34d}
+.gtips .ti{font-weight:800}
+.gbar{display:flex;gap:8px;margin-bottom:10px}
+.gbar button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px;font-size:12px;color:var(--sub);cursor:pointer}
+/* ---- quiz ---- */
+.qcard{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:17px 16px}
+.qnum{font-size:12px;color:var(--sub);font-weight:700}
+.qq{font-size:16px;font-weight:800;margin:9px 0 14px;line-height:1.7}
+.qopt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:none;color:var(--txt);border-radius:12px;padding:12px 13px;font-size:14px;margin-bottom:8px;cursor:pointer;transition:all .15s;font-family:inherit;line-height:1.6}
+.qopt:active{transform:scale(.99)}
+.qopt.ok{border-color:var(--ok);background:rgba(22,163,74,.12);font-weight:700}
+.qopt.bad{border-color:var(--bad);background:rgba(225,29,72,.1)}
+.qopt:disabled{cursor:default}
+.qfb{border-radius:12px;padding:11px 13px;font-size:13px;margin-top:4px;display:none;line-height:1.7}
+.qfb.show{display:block}
+.qfb.ok{background:rgba(22,163,74,.12);color:var(--ok)}
+.qfb.bad{background:rgba(225,29,72,.1);color:var(--bad)}
+.qfb .why{color:var(--txt);margin-top:4px;font-size:12.5px}
+.qscore{text-align:center;padding:20px 10px}
+.qscore .big{font-size:40px;font-weight:900;color:var(--pri)}
+.wrongList{text-align:left;margin-top:14px}
+.wrongItem{background:var(--chip);border-radius:10px;padding:9px 12px;margin-bottom:7px;font-size:13px;line-height:1.7}
+.wrongItem b{font-weight:800}
+/* ---- nav ---- */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card);box-shadow:0 -2px 16px rgba(40,44,90,.1);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+nav button{flex:1;border:none;background:none;color:var(--sub);font-size:11px;font-weight:700;padding:6px 0 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:12px;font-family:inherit}
+nav button .ic{font-size:20px;line-height:1}
+nav button.on{color:var(--pri);background:var(--chip)}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;font-size:13px;padding:9px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:all .25s;z-index:99;max-width:80%;text-align:center}
+#toast.show{opacity:.95;transform:translateX(-50%) translateY(0)}
+.empty{padding:40px 10px;text-align:center;color:var(--sub);font-size:13.5px}
+@media(min-width:640px){.dayGrid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="splash"><div class="splashTxt"><div class="st1">破 晓</div><div class="st3">DAYBREAK</div><div class="st2">数学理综7天速成 · 全高中</div></div></div>
+<header>
+  <div class="hrow">
+    <div class="hlogo">🌅</div>
+    <div>
+      <div class="htitle">破晓</div>
+      <div class="hsub" id="hdrSub">数学+理综 · 正在装载考点…</div>
+    </div>
+    <button class="iconbtn" id="themeBtn" title="切换深色">🌙</button>
+  </div>
+</header>
+<main>
+  <section class="tab on" id="tab-home">
+    <div class="card hero">
+      <div class="heroInner">
+        <div class="heroTitle">破 晓</div>
+        <div class="heroSub">数学 + 物理 + 化学 + 生物 · 7天速成 · 全高中<br>半遮背公式 · 讲解 · 例题 · 全离线</div>
+        <div class="statsRow" id="homeStats"></div>
+        <div class="progWrap">
+          <div class="progBar"><i id="homeProgBar"></i></div>
+          <div class="progTxt" id="homeProgTxt">学习进度加载中…</div>
+        </div>
+      </div>
+    </div>
+    <div class="secTitle">七天计划</div>
+    <div class="dayGrid" id="dayGrid"></div>
+    <div class="secTitle">使用说明</div>
+    <div class="card">
+      <div class="muted" style="line-height:1.8">
+        ① 每天先点「📐 背考点」：公式/结论默认半遮，先回忆，点一下卡片对答案；<br>
+        ② 点「✗ 不认识」→ 先给你看答案，过几题后自动把它<b>拿出来重考</b>（卡片标 🔁），重考答对才算过关；<br>
+        ③ 再看「📘 看讲解」，读讲解 + 例题，读完点「已掌握」；<br>
+        ④ 最后去「✍️ 测验」做一轮题，错题看解析；<br>
+        ⑤ 第二天先把前一天的错题（状态筛选「不认识」）过一遍，再学新内容。<br>
+        <span style="color:var(--sub)">进度自动保存在本机，换设备不同步；右上角可切换深色模式。</span>
+      </div>
+    </div>
+    <div class="card">
+      <button class="btn danger" id="resetBtn">清空全部学习进度</button>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-cards">
+    <div class="filters">
+      <div class="frow" id="dayChips"></div>
+      <div class="frow">
+        <span id="subjChips" style="display:flex;gap:7px;flex-wrap:wrap"></span>
+        <button class="chip hf" id="hfChip">⭐ 高频优先</button>
+      </div>
+      <div class="frow">
+        <button class="chip" id="stChip">状态：全部</button>
+        <button class="chip" id="maskChip">遮罩：半遮</button>
+        <button class="chip" id="modeChip">切换列表</button>
+      </div>
+      <div class="frow"><input id="searchBox" placeholder="搜索考点 / 公式内容…（列表模式用）"></div>
+    </div>
+    <div class="wprog" id="wProg"></div>
+    <div id="cardArea"></div>
+    <div id="listArea" style="display:none"></div>
+  </section>
+
+  <section class="tab" id="tab-lect">
+    <div class="frow" id="gDayChips" style="position:sticky;top:58px;z-index:40;background:var(--bg);padding:6px 0 8px"></div>
+    <div class="wprog" id="gProg"></div>
+    <div id="lectArea"></div>
+  </section>
+
+  <section class="tab" id="tab-quiz">
+    <div id="quizHome">
+      <div class="secTitle">考点测验</div>
+      <div class="card">
+        <div class="frow" id="qzRange"></div>
+        <div class="frow" id="qzSubj"></div>
+        <div class="frow" id="qzCount"></div>
+        <button class="btn" id="startQz">开始测验</button>
+      </div>
+      <div class="card">
+        <div class="muted" style="line-height:1.8">题目覆盖数学、物理、化学、生物全高中核心考点。<br>答错的题会在最后统一回顾，记得把错题对应的讲解再过一遍。</div>
+      </div>
+    </div>
+    <div id="quizRun" style="display:none"></div>
+  </section>
+</main>
+<nav>
+  <button data-tab="home" class="on"><span class="ic">🗓️</span>计划</button>
+  <button data-tab="cards"><span class="ic">📐</span>考点</button>
+  <button data-tab="lect"><span class="ic">📘</span>讲解</button>
+  <button data-tab="quiz"><span class="ic">✍️</span>测验</button>
+</nav>
+<div id="toast"></div>
+<script>
+"use strict";

@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>妹妹 · Three.js 程序化建模 v5</title>
+<style>
+  html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; }
+  body { touch-action:none; -webkit-user-select:none; user-select:none; background:#f4e8f6; }
+  #c { display:block; width:100%; height:100%; }
+  #hud { position:fixed; left:16px; top:14px; z-index:10;
+    font: 12px/1.6 -apple-system, "PingFang SC", "MIUI", sans-serif; color:#9a7aa0; letter-spacing:.5px; pointer-events:none; }
+  #hud b { font-size:13px; color:#7d5f86; }
+  #tip { position:fixed; left:0; right:0; bottom:14px; z-index:10; text-align:center;
+    font: 12px/1.6 -apple-system, "PingFang SC", "MIUI", sans-serif; color:#a98bb0; pointer-events:none; }
+  #state { position:fixed; right:10px; bottom:10px; z-index:10;
+    font: 10px/1 monospace; color:rgba(140,110,150,.55); pointer-events:none; }
+  #err { display:none; position:fixed; left:12px; right:12px; top:35%; z-index:99;
+    background:rgba(255,255,255,.94); color:#c0392b; border-radius:12px;
+    font: 13px/1.7 monospace; padding:14px 16px; white-space:pre-wrap; word-break:break-all; }
+  #loading { position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    font: 13px/1.6 -apple-system, "PingFang SC", "MIUI", sans-serif; color:#b393ba; transition:opacity .5s; }
+</style>
+</head>
+<body>
+<div id="hud"><b>妹妹</b><br>Three.js · 程序化建模 v5</div>
+<div id="tip">拖动旋转 · 点一下眨眼</div>
+<div id="state">booting</div>
+<div id="err"></div>
+<div id="loading">正在建模…</div>
+<canvas id="c"></canvas>
+<script src="three.min.js" onerror="showErr('three.min.js 加载失败')"></script>
+<script>
+function showErr(m){ var e=document.getElementById('err'); e.style.display='block'; e.textContent += m + '\n'; }
+function setState(s){ var e=document.getElementById('state'); if(e) e.textContent=s; }
+window.onerror = function(msg, src, line, col){ showErr('[ERR] ' + msg + ' @' + line + ':' + col); setState('err'); return false; };
+</script>
+<script>
+(function(){
+'use strict';
+if (typeof THREE === 'undefined') { showErr('THREE 未定义'); return; }
+
+var sm = THREE.MathUtils.smoothstep;
+var lerp = THREE.MathUtils.lerp;
+var clamp = THREE.MathUtils.clamp;
+
+/* ============================== 基础 ============================== */
+var canvas = document.getElementById('c');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setClearColor(0xf3e7f7, 1);
+
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(33, 1, 0.5, 200);
+
+function resize(){
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize); resize();
+
+/* 渐变背景（截图里也带上） */
+(function bg(){
+  var c = document.createElement('canvas'); c.width = 2; c.height = 512;
+  var x = c.getContext('2d');
+  var g = x.createLinearGradient(0, 0, 0, 512);
+  g.addColorStop(0, '#fff2f8');
+  g.addColorStop(0.35, '#f7e7ff');
+  g.addColorStop(0.7, '#e3ecff');
+  g.addColorStop(1, '#d6e4ff');
+  x.fillStyle = g; x.fillRect(0, 0, 2, 512);
+  var t = new THREE.CanvasTexture(c);
+  scene.background = t;
+})();
+
+/* ============================== NPR 材质系统 ============================== */
+/* 参考 sakura-atelier：两段式 ramp、冷色相阴影、脸部平光、30% 亮度下限、
+   菲涅尔 rim、头发天使环高光、反壳描边（暖深棕，不用纯黑） */
+
+var LIGHT_DIR = new THREE.Vector3(-0.45, 0.8, 0.65).normalize();
+
+function shadowOf(hex){
+  var c = new THREE.Color(hex);
+  var hsl = {};
+  c.getHSL(hsl);
+  var h = (hsl.h + 0.045) % 1;
+  return new THREE.Color().setHSL(h, Math.min(1, hsl.s * 1.12 + 0.06), Math.max(0, hsl.l * 0.62));
+}
+
+var TOON_VERT = [
+  'varying vec3 vN;',
+  'varying vec3 vW;',
+  'varying vec2 vUv;',
+  'void main() {',
+  '  vN = normalize(mat3(modelMatrix) * normal);',
+  '  vec4 wp = modelMatrix * vec4(position, 1.0);',
+  '  vW = wp.xyz;',
+  '  vUv = uv;',
+  '  gl_Position = projectionMatrix * viewMatrix * wp;',
+  '}'
+].join('\n');
+
+var TOON_FRAG = [
+  'varying vec3 vN;',
+  'varying vec3 vW;',
+  'varying vec2 vUv;',
+  'uniform vec3 uColor, uShadow, uLightDir, uEmissive;',
+  'uniform sampler2D uMap;',
+  'uniform float uHasMap, uFace, uHairBand, uRim;',
+  'void main() {',
+  '  vec3 n = normalize(vN);',
+  '  vec3 v = normalize(cameraPosition - vW);',
+  '  vec3 base = uColor;',
+  '  vec3 shadowC = uShadow;',
+  '  if (uHasMap > 0.5) {',
+  '    vec4 t = texture2D(uMap, vUv);',
+  '    base = t.rgb;',
+  '    shadowC = base * vec3(0.72, 0.66, 0.78);',
+  '  }',
+  '  float ndl = dot(n, uLightDir);',
+  '  float band = smoothstep(-0.08, 0.22, ndl);',
+  '  if (uFace > 0.5) band = mix(0.78, 1.0, smoothstep(-0.4, 0.35, ndl));',
+  '  vec3 c = mix(shadowC, base, band);',
+  '  c = max(c, base * 0.32);',
+  '  float rim = pow(1.0 - max(dot(n, v), 0.0), 3.2) * uRim * (0.35 + 0.65 * band);',
+  '  c += rim * vec3(0.33, 0.29, 0.47);',
+  '  if (uHairBand > 0.5) {',
+  '    vec3 h = normalize(uLightDir + v);',
+  '    float spec = pow(max(dot(n, h), 0.0), 42.0);',
+  '    float ring = smoothstep(0.25, 0.6, spec) * 0.42;',
+  '    c += ring * vec3(1.0, 0.96, 0.88);',
+  '  }',
+  '  c += uEmissive;',
+  '  gl_FragColor = vec4(c, 1.0);',
+  '}'
+].join('\n');
+
+function toonMaterial(opts){
+  opts = opts || {};
+  var color = opts.color !== undefined ? opts.color : 0xffffff;
+  var uniforms = {
+    uColor: { value: new THREE.Color(color) },
+    uShadow: { value: shadowOf(color) },
+    uMap: { value: opts.map || null },
+    uHasMap: { value: opts.map ? 1 : 0 },
+    uLightDir: { value: LIGHT_DIR },
+    uFace: { value: opts.faceMode || 0 },
+    uHairBand: { value: opts.hairBand || 0 },
+    uRim: { value: opts.rim !== undefined ? opts.rim : 0.55 },
+    uEmissive: { value: new THREE.Color(opts.emissive || 0x000000) }
+  };
+  var mat = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    side: opts.doubleSide ? THREE.DoubleSide : THREE.FrontSide,
+    vertexShader: TOON_VERT,
+    fragmentShader: TOON_FRAG
+  });
+  mat.userData.uniforms = uniforms;
+  return mat;
+}
+
+var OUTLINE_VERT = [
+  'uniform float uThick;',
+  'void main() {',
+  '  vec3 p = position + normal * uThick;',
+  '  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);',
+  '}'
+].join('\n');
+var OUTLINE_FRAG = [
+  'uniform vec3 uLine;',
+  'void main() { gl_FragColor = vec4(uLine, 1.0); }'
+].join('\n');
+
+function outlineFor(mesh, thickness, color){
+  var mat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    uniforms: {
+      uThick: { value: thickness },
+      uLine: { value: new THREE.Color(color !== undefined ? color : 0x3a2530) }
+    },
+    vertexShader: OUTLINE_VERT,
+    fragmentShader: OUTLINE_FRAG
+  });
+  var o = new THREE.Mesh(mesh.geometry, mat);
+  return o;
+}
+
+/* 简易几何合并（非索引拼接，position/normal/uv） */
+function mergeGeos(geos){
+  var merged = [];
+  for (var i = 0; i < geos.length; i++){
+    merged.push(geos[i].index ? geos[i].toNonIndexed() : geos[i]);
+  }
+  var vcount = 0;
+  for (var j = 0; j < merged.length; j++) vcount += merged[j].attributes.position.count;
+  var pos = new Float32Array(vcount * 3);
+  var nor = new Float32Array(vcount * 3);
+  var uv = new Float32Array(vcount * 2);
+  var o3 = 0, o2 = 0;
+  for (var k = 0; k < merged.length; k++){
+    var g = merged[k];
+    pos.set(g.attributes.position.array, o3);
+    nor.set(g.attributes.normal.array, o3);
+    if (g.attributes.uv) uv.set(g.attributes.uv.array, o2);
+    o3 += g.attributes.position.count * 3;
+    o2 += g.attributes.position.count * 2;
+  }
+  var out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  out.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return out;
+}
+
+/* ============================== 脸部贴图（平面投影用，1024²） ============================== */
+var FACE_SIZE = 1024;
+var FACE_SPAN = 0.40;   // 贴图中央 80% 给脸
+var faceCanvas = document.createElement('canvas');
+faceCanvas.width = faceCanvas.height = FACE_SIZE;
+var fg = faceCanvas.getContext('2d');
+var faceTex = new THREE.CanvasTexture(faceCanvas);
+faceTex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1);
+
+var SKIN = '#ffe6d5';
+var EYE_COLOR = '#d9903f';   // 琥珀金
+
+function lighten(hex, k){
+  var c = new THREE.Color(hex);
+  var hsl = {};
+  c.getHSL(hsl);
+  return '#' + new THREE.Color().setHSL(hsl.h, hsl.s, Math.min(1, hsl.l + k)).getHexString();
+}
+function darken(hex, k){ return lighten(hex, -k); }
+
+function drawEye(p, cx, cy, mirror){
+  var w = 165 * p.eyeSize;
+  var h = w * 0.72;
+  var st = 'round';
+  var tilt = p.eyeTilt * mirror;
+  fg.save();
+  fg.translate(cx, cy);
+  fg.rotate(tilt);
+  fg.scale(mirror, 1);
+
+  var blink = p.blink || 0;
+  if (blink > 0.92){
+    fg.strokeStyle = '#33222e';
+    fg.lineWidth = w * 0.11;
+    fg.lineCap = 'round';
+    fg.beginPath();
+    fg.moveTo(-w * 0.46, h * 0.05);
+    fg.quadraticCurveTo(0, h * 0.34, w * 0.48, h * 0.02);
+    fg.stroke();
+    fg.restore();
+    return;
+  }
+
+  var top = -h * 0.52, bot = h * 0.48;
+  var shape = function(){
+    fg.beginPath();
+    fg.moveTo(-w * 0.5, -h * 0.04);
+    fg.bezierCurveTo(-w * 0.34, top, w * 0.30, top, w * 0.5, -h * 0.10);
+    fg.bezierCurveTo(w * 0.42, bot, -w * 0.30, bot, -w * 0.5, -h * 0.04);
+    fg.closePath();
+  };
+  shape();
+  fg.fillStyle = '#fdfbfa';
+  fg.fill();
+
+  fg.save();
+  shape();
+  fg.clip();
+  var ix = (p.look ? p.look.x : 0) * w * 0.14;
+  var iy = (p.look ? p.look.y : 0) * w * 0.10 + h * 0.02;
+  var ir = w * 0.30;
+  var grad = fg.createLinearGradient(ix, iy - ir, ix, iy + ir);
+  grad.addColorStop(0, darken(p.eyeColor, 0.18));
+  grad.addColorStop(0.55, p.eyeColor);
+  grad.addColorStop(1, lighten(p.eyeColor, 0.22));
+  fg.fillStyle = grad;
+  fg.beginPath();
+  fg.ellipse(ix, iy, ir * 0.86, ir, 0, 0, Math.PI * 2);
+  fg.fill();
+  fg.fillStyle = darken(p.eyeColor, 0.30);
+  fg.beginPath();
+  fg.ellipse(ix, iy + h * 0.02, ir * 0.34, ir * 0.44, 0, 0, Math.PI * 2);
+  fg.fill();
+  fg.fillStyle = lighten(p.eyeColor, 0.32);
+  fg.globalAlpha = 0.8;
+  fg.beginPath();
+  fg.ellipse(ix, iy + ir * 0.55, ir * 0.5, ir * 0.28, 0, 0, Math.PI * 2);
+  fg.fill();
+  fg.globalAlpha = 1;
+  fg.fillStyle = 'rgba(90,70,110,0.30)';
+  fg.beginPath();
+  fg.moveTo(-w * 0.5, -h * 0.06);
+  fg.bezierCurveTo(-w * 0.34, top, w * 0.30, top, w * 0.5, -h * 0.12);
+  fg.bezierCurveTo(w * 0.30, top * 0.45, -w * 0.34, top * 0.45, -w * 0.5, -h * 0.06);
+  fg.fill();
+  fg.fillStyle = 'rgba(255,255,255,0.95)';
+  fg.beginPath();
+  fg.ellipse(ix - ir * 0.42, iy - ir * 0.38, ir * 0.26, ir * 0.20, -0.3, 0, Math.PI * 2);
+  fg.fill();
+  fg.fillStyle = 'rgba(255,255,255,0.75)';
+  fg.beginPath();
+  fg.arc(ix + ir * 0.40, iy + ir * 0.30, ir * 0.10, 0, Math.PI * 2);
+  fg.fill();
+  fg.restore();
+
+  if (blink > 0.02){
+    fg.fillStyle = p.skin;
+    var lid = -h * 0.52 + (h * 1.0) * blink;
+    fg.fillRect(-w * 0.55, -h * 0.6, w * 1.1, lid + h * 0.6);
+    fg.strokeStyle = 'rgba(51,34,46,0.85)';
+    fg.lineWidth = w * 0.06;
+    fg.beginPath();
+    fg.moveTo(-w * 0.48, lid);
+    fg.quadraticCurveTo(0, lid + h * 0.10, w * 0.48, lid);
+    fg.stroke();
+  }
+
+  fg.strokeStyle = '#2c1d28';
+  fg.lineCap = 'round';
+  fg.lineWidth = w * 0.13;
+  fg.beginPath();
+  fg.moveTo(-w * 0.46, -h * 0.02);
+  fg.bezierCurveTo(-w * 0.32, top * 1.12, w * 0.30, top * 1.14, w * 0.50, -h * 0.10);
+  fg.stroke();
+  fg.lineWidth = w * 0.11;
+  fg.beginPath();
+  fg.moveTo(w * 0.48, -h * 0.12);
+  fg.quadraticCurveTo(w * 0.64, -h * 0.22, w * 0.72, -h * 0.30);
+  fg.stroke();
+  fg.strokeStyle = 'rgba(160,110,120,0.55)';
+  fg.lineWidth = w * 0.035;
+  fg.beginPath();
+  fg.moveTo(-w * 0.30, top * 1.28);
+  fg.quadraticCurveTo(0, top * 1.52, w * 0.28, top * 1.30);
+  fg.stroke();
+  fg.strokeStyle = 'rgba(60,40,55,0.5)';
+  fg.lineWidth = w * 0.045;
+  fg.beginPath();
+  fg.moveTo(w * 0.18, bot * 0.98);
+  fg.quadraticCurveTo(w * 0.38, bot * 0.92, w * 0.48, bot * 0.66);
+  fg.stroke();
+  fg.restore();
+}
+
+function drawBrow(p, cx, cy, mirror){
+  var w = 165 * p.eyeSize;
+  fg.save();
+  fg.translate(cx, cy - w * 0.74);
+  fg.scale(mirror, 1);
+  fg.strokeStyle = darken(p.browColor, 0.05);
+  fg.lineWidth = w * 0.085;
+  fg.lineCap = 'round';
+  fg.beginPath();
+  fg.moveTo(-w * 0.40, w * 0.06);
+  fg.quadraticCurveTo(0, -w * 0.16, w * 0.42, -w * 0.02);
+  fg.stroke();
+  fg.restore();
+}
+
+function drawMouth(p, cx, cy){
+  var w = 150 * p.eyeSize;
+  var s = w * 0.5;
+  fg.save();
+  fg.translate(cx, cy);
+  fg.lineCap = 'round';
+  fg.strokeStyle = '#a4525c';
+  fg.lineWidth = s * 0.13;
+  fg.beginPath();
+  fg.moveTo(-s * 0.42, -s * 0.05);
+  fg.quadraticCurveTo(0, s * 0.30, s * 0.42, -s * 0.05);
+  fg.stroke();
+  fg.strokeStyle = 'rgba(140,60,70,0.35)';
+  fg.lineWidth = s * 0.06;
+  fg.beginPath();
+  fg.moveTo(-s * 0.2, s * 0.28);
+  fg.quadraticCurveTo(0, s * 0.36, s * 0.2, s * 0.28);
+  fg.stroke();
+  fg.restore();
+}
+
+function paintFace(p){
+  var SIZE = FACE_SIZE;
+  fg.setTransform(1, 0, 0, 1, 0, 0);
+  fg.fillStyle = p.skin;
+  fg.fillRect(0, 0, SIZE, SIZE);
+  var warm = fg.createRadialGradient(512, 640, 60, 512, 640, 420);
+  warm.addColorStop(0, 'rgba(255,190,170,0.10)');
+  warm.addColorStop(1, 'rgba(255,190,170,0)');
+  fg.fillStyle = warm;
+  fg.fillRect(0, 0, SIZE, SIZE);
+
+  var eyeY = 552;
+  var sp = 145 * p.eyeSpacing;
+
+  if (p.bangsShadow){
+    fg.fillStyle = 'rgba(90,60,95,0.13)';
+    fg.beginPath();
+    fg.moveTo(240, 356);
+    fg.quadraticCurveTo(512, 440, 784, 356);
+    fg.quadraticCurveTo(512, 320, 240, 356);
+    fg.fill();
+  }
+
+  if (p.blush > 0.02){
+    var ms = [-1, 1];
+    for (var mi = 0; mi < 2; mi++){
+      var m = ms[mi];
+      var bx = 512 + m * sp * 1.12, by = eyeY + 96;
+      var rg = fg.createRadialGradient(bx, by, 4, bx, by, 74);
+      rg.addColorStop(0, 'rgba(255,120,130,' + (0.34 * p.blush) + ')');
+      rg.addColorStop(1, 'rgba(255,120,130,0)');
+      fg.fillStyle = rg;
+      fg.fillRect(bx - 80, by - 80, 160, 160);
+      if (p.blush > 0.55){
+        fg.strokeStyle = 'rgba(220,90,105,' + (0.30 * p.blush) + ')';
+        fg.lineWidth = 5;
+        for (var k = -1; k <= 1; k++){
+          fg.beginPath();
+          fg.moveTo(bx + k * 22 - 12, by - 26);
+          fg.lineTo(bx + k * 22 + 12, by + 26);
+          fg.stroke();
+        }
+      }
+    }
+  }
+
+  drawEye(p, 512 - sp, eyeY, 1);
+  drawEye(p, 512 + sp, eyeY, -1);
+  drawBrow(p, 512 - sp, eyeY, 1);
+  drawBrow(p, 512 + sp, eyeY, -1);
+
+  fg.strokeStyle = 'rgba(200,120,110,0.75)';
+  fg.lineWidth = 5;
+  fg.lineCap = 'round';
+  fg.beginPath();
+  fg.moveTo(514, eyeY + 74);
+  fg.lineTo(506, eyeY + 86);
+  fg.stroke();
+
+  drawMouth(p, 512, eyeY + 148);
+  faceTex.needsUpdate = true;
+}
+
+var faceParams = {
+  skin: SKIN,
+  eyeSize: 1.02,
+  eyeSpacing: 1.0,
+  eyeTilt: 0.0,
+  eyeColor: EYE_COLOR,
+  browColor: '#7a4a52',
+  blush: 0.5,
+  blink: 0,
+  look: { x: 0, y: 0 },
+  bangsShadow: true
+};
+paintFace(faceParams);
+
+/* ============================== 头部（平面投影脸） ============================== */
+var headGroup = new THREE.Group();
+headGroup.position.set(0, 9.7, 0);
+
+(function buildHead(){
+  var geo = new THREE.SphereGeometry(1, 64, 48);
+  var pos = geo.attributes.position;
+  var uv = geo.attributes.uv;
+  var v = new THREE.Vector3();
+  for (var i = 0; i < pos.count; i++){
+    v.fromBufferAttribute(pos, i);
+    var x = v.x, y = v.y, z = v.z;
+    y *= 1.05;
+    var s = sm(-y, 0.05, 1.0);
+    var pinch = 1 - s * 0.52;
+    x *= pinch;
+    z = z * (1 - s * 0.30) + s * 0.16;
+    y -= s * s * 0.10;
+    var cheek = sm(-y, -0.05, 0.45) * (1 - sm(-y, 0.45, 0.9)) * sm(z, -0.1, 0.6);
+    x *= 1 + cheek * 0.10;
+    z *= 1 - 0.10 * sm(z, 0.55, 1.0);
+    pos.setXYZ(i, x, y, z);
+
+    if (z > -0.05){
+      var blend = sm(z, -0.05, 0.25);
+      var u2 = 0.5 + (x * FACE_SPAN);
+      var v2 = 0.5 + (y * FACE_SPAN);
+      uv.setXY(i, lerp(0.02, u2, blend), lerp(0.02, v2, blend));
+    } else {
+      uv.setXY(i, 0.02, 0.02);
+    }
+  }
+  geo.computeVertexNormals();
+
+  var mat = toonMaterial({ map: faceTex, faceMode: 1, rim: 0.18 });
+  var skull = new THREE.Mesh(geo, mat);
+  headGroup.add(skull);
+  headGroup.add(outlineFor(skull, 0.022));
+
+  // 耳朵
+  var earGeo = new THREE.SphereGeometry(0.24, 12, 10);
+  earGeo.scale(0.5, 1, 0.8);
+  var earMat = toonMaterial({ color: SKIN, rim: 0.2 });
+  [-1, 1].forEach(function(m){
+    var ear = new THREE.Mesh(earGeo, earMat);
+    ear.position.set(m * 0.96, -0.08, 0);
+    headGroup.add(ear);
+  });
+})();
+
+/* ============================== 头发 ============================== */
+/* 参考 sakura-atelier：CatmullRom 发束 + 重剖面（根部鼓、尖端尖）、
+   scalp helmet、刘海到眉线、多束双马尾 + 弹簧 */
+
+var HAIR_COLOR = '#7a4a52';
+var RIBBON_COLOR = '#d8465f';
+var HEAD_R = 1;
+var SCALP_R = HEAD_R * 1.07;
+
+var hairMat = toonMaterial({ color: HAIR_COLOR, hairBand: 1, rim: 0.45 });
+var ribbonMat = toonMaterial({ color: RIBBON_COLOR, rim: 0.4 });
+
+function strand(pts, r0, sharp){
+  sharp = sharp || 1.6;
+  var curve = new THREE.CatmullRomCurve3(pts.map(function(p){ return new THREE.Vector3(p[0], p[1], p[2]); }));
+  var geo = new THREE.TubeGeometry(curve, 14, 1, 7);
+  var pos = geo.attributes.position;
+  var uv = geo.attributes.uv;
+  var c = new THREE.Vector3(), v = new THREE.Vector3();
+  for (var i = 0; i < pos.count; i++){
+    var t = uv.getX(i);
+    curve.getPointAt(t, c);
+    v.fromBufferAttribute(pos, i).sub(c);
+    var prof = r0 * Math.pow(Math.max(0.001, 1 - t), 1 / sharp) * (0.55 + 0.45 * Math.sin(Math.min(1, t * 4) * Math.PI * 0.5));
+    pos.setXYZ(i, c.x + v.x * prof, c.y + v.y * prof, c.z + v.z * prof);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function sphP(theta, phi, r){
+  r = r || SCALP_R;
+  return [r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.cos(theta)];
+}
+
+var hairGroup = new THREE.Group();
+var hairSprings = [];
+
+(function buildHair(){
+  var TAU = Math.PI * 2;
+  var statics = [];
+
+  // helmet：两片球壳合并
+  var cap = new THREE.SphereGeometry(SCALP_R, 32, 18, 0, TAU, 0, 1.30);
+  var back = new THREE.SphereGeometry(SCALP_R, 32, 14, Math.PI / 2 + 1.05, TAU - 2.10, 1.25, 1.05);
+  statics.push(cap, back);
+
+  // 刘海：10 束，到眉线，M 形
+  var n = 10;
+  for (var i = 0; i < n; i++){
+    var f = (i / (n - 1)) * 2 - 1;
+    var th = f * 0.62;
+    var root = sphP(th * 0.55, 0.42, SCALP_R * 0.99);
+    var mid = sphP(th * 0.85, 0.78, SCALP_R * 1.015);
+    var tipY = HEAD_R * 0.10 - Math.abs(f) * HEAD_R * 0.22;
+    var tip = [Math.sin(th) * SCALP_R * 0.98, tipY, Math.cos(th * 0.85) * SCALP_R * 0.99];
+    statics.push(strand([root, mid, tip], HEAD_R * (0.16 - Math.abs(f) * 0.04)));
+  }
+
+  // 侧发
+  var ms = [-1, 1];
+  for (var si = 0; si < 2; si++){
+    var m = ms[si];
+    var th2 = m * 1.25;
+    statics.push(strand([
+      sphP(th2, 0.55, SCALP_R * 0.98),
+      [m * SCALP_R * 1.06, -HEAD_R * 0.35, SCALP_R * 0.42],
+      [m * SCALP_R * 1.02, -HEAD_R * (0.9 + 0.8 * 1.6), SCALP_R * 0.30],
+      [m * SCALP_R * 0.92, -HEAD_R * (1.4 + 0.8 * 3.2), SCALP_R * 0.24]
+    ], HEAD_R * 0.15));
+  }
+
+  // 后发：13 束
+  var n2 = 13;
+  for (var j = 0; j < n2; j++){
+    var f2 = j / (n2 - 1);
+    var th3 = Math.PI * 0.55 + f2 * Math.PI * 0.9;
+    var rootA = sphP(th3, 0.5, SCALP_R * 0.98);
+    var midA = sphP(th3, 1.15, SCALP_R * 1.04);
+    var sway = Math.sin(f2 * Math.PI);
+    var tip2 = [
+      Math.sin(th3) * SCALP_R * (1.02 - 0.6 * 0.5),
+      -HEAD_R * 2.6,
+      Math.cos(th3) * SCALP_R * (1.05 - 0.6 * 0.35)
+    ];
+    statics.push(strand([
+      rootA, midA,
+      [midA[0] * 1.05, -HEAD_R * 2.6 * 0.55, midA[2] * 1.1],
+      tip2
+    ], HEAD_R * (0.15 + sway * 0.03)));
+  }
+
+  var staticMesh = new THREE.Mesh(mergeGeos(statics), hairMat);
+  hairGroup.add(staticMesh);
+  hairGroup.add(outlineFor(staticMesh, 0.016));
+
+  // 呆毛
+  var ahogePts = [
+    [0.10, SCALP_R * 0.98, 0.30],
+    [0.14, SCALP_R * 1.28, 0.36],
+    [0.10, SCALP_R * 1.52, 0.30],
+    [0.00, SCALP_R * 1.62, 0.18]
+  ];
+  var ahogeGeo = strand(ahogePts, HEAD_R * 0.05);
+  var ahoge = new THREE.Mesh(ahogeGeo, hairMat);
+  hairGroup.add(ahoge);
+  hairGroup.add(outlineFor(ahoge, 0.012));
+
+  // 双马尾（7 束 + 发圈 + 弹簧 pivot）
+  function tail(side, len, lift){
+    var geos = [];
+    var n3 = 7;
+    for (var k = 0; k < n3; k++){
+      var a = (k / n3) * TAU;
+      var ox = Math.cos(a) * HEAD_R * 0.24, oz = Math.sin(a) * HEAD_R * 0.20;
+      geos.push(strand([
+        [0, 0, 0],
+        [ox * 1.6 + side * HEAD_R * 0.42 * lift, HEAD_R * 0.16 * lift, oz * 1.5],
+        [ox * 1.9 + side * HEAD_R * 0.50 * lift, -HEAD_R * len * 0.5, oz * 1.8],
+        [ox * 0.9 + side * HEAD_R * 0.18, -HEAD_R * len, oz * 0.8]
+      ], HEAD_R * 0.15, 1.3));
+    }
+    var tie = new THREE.TorusGeometry(HEAD_R * 0.20, HEAD_R * 0.065, 8, 14);
+    return { geos: geos, tie: tie };
+  }
+
+  function addTail(pivotPos, side, len, lift){
+    var pivot = new THREE.Group();
+    pivot.position.set(pivotPos[0], pivotPos[1], pivotPos[2]);
+    var t = tail(side, len, lift);
+    var m2 = new THREE.Mesh(mergeGeos(t.geos), hairMat);
+    pivot.add(m2);
+    pivot.add(outlineFor(m2, 0.016));
+    var tieMesh = new THREE.Mesh(t.tie, ribbonMat);
+    tieMesh.rotation.x = Math.PI / 2;
+    pivot.add(tieMesh);
+    hairGroup.add(pivot);
+    hairSprings.push({ pivot: pivot, ax: 0, az: 0, vx: 0, vz: 0, phase: Math.random() * TAU });
+  }
+  addTail([-SCALP_R * 1.12, SCALP_R * 0.68, -SCALP_R * 0.12], -1, 2.1, 1.1);
+  addTail([SCALP_R * 1.12, SCALP_R * 0.68, -SCALP_R * 0.12], 1, 2.1, 1.1);
+})();
+
+headGroup.add(hairGroup);
+
+/* ============================== 身体（水手服） ============================== */
+var charGroup = new THREE.Group();
+scene.add(charGroup);
+
+var headHolder = new THREE.Group();
+headHolder.position.y = 9.7;
+charGroup.add(headHolder);
+headHolder.add(headGroup);
+headGroup.position.set(0, 0, 0);
+
+var bodyGroup = new THREE.Group();
+charGroup.add(bodyGroup);
+
+(function buildBody(){
+  var P = {
+    neckTop: 8.9,
+    shoulderY: 8.55,
+    shoulderW: 1.12,
+    chestY: 7.95,
+    waistY: 6.9,
+    hipY: 6.45,
+    kneeY: 3.3,
+    ankleY: 0.5
+  };
+
+  var COL = {
+    A: '#3a4a72',   // 藏蓝
+    B: '#f4f1ea',   // 奶白
+    skin: SKIN,
+    dark: '#2e2431',
+    red: '#c8323e'
+  };
+  var mats = {
+    A: toonMaterial({ color: COL.A, rim: 0.4 }),
+    B: toonMaterial({ color: COL.B, rim: 0.4 }),
+    skin: toonMaterial({ color: COL.skin, rim: 0.25 }),
+    dark: toonMaterial({ color: COL.dark, rim: 0.3 }),
+    red: toonMaterial({ color: COL.red, rim: 0.45 })
+  };
+  var buckets = { A: [], B: [], skin: [], dark: [], red: [] };
+  var put = function(k, geo){ buckets[k].push(geo); };
+
+  var _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quaternion();
+  function limb(p1, p2, r1, r2){
+    _v1.set(p1[0], p1[1], p1[2]); _v2.set(p2[0], p2[1], p2[2]);
+    var dir = _v2.clone().sub(_v1);
+    var len = dir.length();
+    var cyl = new THREE.CylinderGeometry(r2, r1, len, 10);
+    var s1 = new THREE.SphereGeometry(r1, 10, 8);
+    var s2 = new THREE.SphereGeometry(r2, 10, 8);
+    s1.translate(0, -len / 2, 0);
+    s2.translate(0, len / 2, 0);
+    var g = mergeGeos([cyl, s1, s2]);
+    _q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+    g.applyQuaternion(_q);
+    g.translate((_v1.x + _v2.x) / 2, (_v1.y + _v2.y) / 2, (_v1.z + _v2.z) / 2);
+    return g;
+  }
+
+  function lathe(profile, seg){
+    seg = seg || 24;
+    var pts = profile.slice().reverse().map(function(p){ return new THREE.Vector2(p[0], p[1]); });
+    return new THREE.LatheGeometry(pts, seg);
+  }
+
+  function pleatedSkirt(topR, botR, topY, botY, pleats, depth){
+    var g = lathe([
+      [topR, topY],
+      [lerp(topR, botR, 0.35), lerp(topY, botY, 0.35)],
+      [lerp(topR, botR, 0.75), lerp(topY, botY, 0.75)],
+      [botR, botY],
+      [botR * 0.96, botY - 0.03]
+    ], 56);
+    var pos = g.attributes.position;
+    for (var i = 0; i < pos.count; i++){
+      var x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      var a = Math.atan2(z, x);
+      var rr = Math.hypot(x, z);
+      if (rr < 1e-4) continue;
+      var drop = sm(topY - y, 0, topY - botY);
+      var wave = Math.abs(((a / (Math.PI * 2) * pleats) % 1) - 0.5) * 2 - 0.5;
+      var k = 1 + wave * depth * drop;
+      pos.setX(i, x * k);
+      pos.setZ(i, z * k);
+    }
+    g.computeVertexNormals();
+    return g;
+  }
+
+  function bow(w){
+    var loop = new THREE.TorusGeometry(w * 0.55, w * 0.22, 8, 12);
+    var l1 = loop.clone(); l1.scale(1, 0.62, 0.55); l1.rotateZ(0.5); l1.translate(-w * 0.62, 0, 0);
+    var l2 = loop.clone(); l2.scale(1, 0.62, 0.55); l2.rotateZ(-0.5); l2.translate(w * 0.62, 0, 0);
+    var knot = new THREE.SphereGeometry(w * 0.28, 8, 8);
+    var t1 = new THREE.ConeGeometry(w * 0.16, w * 1.3, 6);
+    t1.rotateX(Math.PI); t1.rotateZ(0.35); t1.translate(-w * 0.3, -w * 0.7, 0);
+    var t2 = new THREE.ConeGeometry(w * 0.16, w * 1.3, 6);
+    t2.rotateX(Math.PI); t2.rotateZ(-0.35); t2.translate(w * 0.3, -w * 0.7, 0);
+    return mergeGeos([l1, l2, knot, t1, t2]);
+  }
+
+  // 脖子
+  put('skin', limb([0, P.neckTop - 0.55, 0], [0, P.neckTop + 0.15, 0], 0.30, 0.32));
+
+  // 手臂：泡泡袖 + 裸臂
+  function shoulder(m){ return [m * P.shoulderW, P.shoulderY, 0]; }
+  function elbow(m){ return [m * (P.shoulderW + 0.42), P.shoulderY - 0.75, 0.10]; }
+  function wrist(m){ return [m * (P.shoulderW + 0.72), P.shoulderY - 1.65, 0.26]; }
+  var ms = [-1, 1];
+  for (var ai = 0; ai < 2; ai++){
+    var m = ms[ai];
+    put('B', limb(shoulder(m), [m * (P.shoulderW + 0.28), P.shoulderY - 0.62, 0.05], 0.44, 0.38));
+    put('skin', limb([m * (P.shoulderW + 0.26), P.shoulderY - 0.58, 0.05], wrist(m), 0.25, 0.21));
+    var h = new THREE.SphereGeometry(0.25, 10, 8);
+    h.scale(0.8, 0.68, 1.1);
+    h.translate(wrist(m)[0], wrist(m)[1] - 0.28, wrist(m)[2] + 0.08);
+    put('skin', h);
+  }
+
+  // 躯干（水手服）
+  var torsoProfile = [
+    [0.32, P.neckTop - 0.05],
+    [1.02, P.shoulderY],
+    [1.10, P.chestY],
+    [0.84, P.waistY],
+    [1.08, P.hipY],
+    [1.04, P.hipY - 0.42]
+  ];
+  var torso = lathe(torsoProfile, 26);
+  torso.scale(1, 1, 0.74);
+  put('B', torso);
+
+  // 水手领：后翻片 + 肩翼
+  var flap = new THREE.BoxGeometry(1.75, 0.10, 1.20);
+  flap.translate(0, P.shoulderY + 0.12, -0.55);
+  put('A', flap);
+  for (var wi = 0; wi < 2; wi++){
+    var mw = ms[wi];
+    var wing = new THREE.BoxGeometry(0.60, 0.09, 0.92);
+    wing.rotateY(mw * 0.32);
+    wing.translate(mw * 0.78, P.shoulderY + 0.07, 0.08);
+    put('A', wing);
+  }
+
+  // 领结
+  var tie = bow(0.42);
+  tie.translate(0, P.shoulderY - 0.62, 0.98);
+  put('red', tie);
+
+  // 胸前条纹
+  var stripe = new THREE.TorusGeometry(1.02, 0.05, 6, 28);
+  stripe.rotateX(Math.PI / 2);
+  stripe.scale(1, 1, 0.76);
+  stripe.translate(0, P.chestY - 0.30, 0);
+  put('dark', stripe);
+
+  // 百褶裙
+  put('A', pleatedSkirt(0.95, 1.78, P.waistY + 0.25, P.kneeY + 1.6, 18, 0.20));
+
+  // 腿 + 过膝袜 + 鞋
+  for (var li = 0; li < 2; li++){
+    var ml = ms[li];
+    var hip = [ml * 0.55, P.hipY - 0.15, 0];
+    var knee = [ml * 0.52, P.kneeY, 0.07];
+    var ankle = [ml * 0.50, P.ankleY, -0.04];
+    put('skin', limb(hip, knee, 0.42, 0.34));
+    put('dark', limb([ml * 0.52, P.kneeY + 0.85, 0.06], ankle, 0.34, 0.23));
+    var shoe = new THREE.SphereGeometry(0.36, 10, 8);
+    shoe.scale(0.78, 0.55, 1.5);
+    shoe.translate(ml * 0.50, 0.30, 0.16);
+    put('dark', shoe);
+  }
+
+  // 合并 → mesh + outline
+  Object.keys(buckets).forEach(function(k){
+    var arr = buckets[k];
+    if (!arr.length) return;
+    var mesh = new THREE.Mesh(mergeGeos(arr), mats[k]);
+    bodyGroup.add(mesh);
+    bodyGroup.add(outlineFor(mesh, 0.018));
+  });
+})();
+
+/* ============================== 地面阴影 ============================== */
+(function groundShadow(){
+  var c = document.createElement('canvas'); c.width = c.height = 256;
+  var x = c.getContext('2d');
+  var g = x.createRadialGradient(128, 128, 8, 128, 128, 120);
+  g.addColorStop(0, 'rgba(96,64,96,0.30)');
+  g.addColorStop(0.55, 'rgba(96,64,96,0.13)');
+  g.addColorStop(1, 'rgba(96,64,96,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  var t = new THREE.CanvasTexture(c);
+  var shadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(6.5, 6.5),
+    new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false })
+  );
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = 0.02;
+  shadow.scale.set(0.85, 1.25, 1);
+  scene.add(shadow);
+})();
+
+/* ============================== 相机 + 交互 ============================== */
+var rotY = 0.0, rotVel = 0, camPitch = 0.16, dist = 24;
+var autoRotate = true, dragging = false, lastX = 0, lastY = 0;
+var pointers = new Map();
+var lastInteract = -10;
+
+canvas.addEventListener('pointerdown', function(e){
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
+  lastInteract = performance.now() / 1000;
+  if (pointers.size === 1){ dragging = true; lastX = e.clientX; lastY = e.clientY; autoRotate = false; }
+});
+canvas.addEventListener('pointermove', function(e){
+  var p = pointers.get(e.pointerId);
+  if (!p) return;
+  var dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  lastInteract = performance.now() / 1000;
+  if (pointers.size === 1 && dragging){
+    rotVel = dx * 0.0075;
+    rotY += rotVel;
+    camPitch = clamp(camPitch + dy * 0.003, -0.12, 0.55);
+  }
+});
+function endPointer(e){
+  var p = pointers.get(e.pointerId);
+  pointers.delete(e.pointerId);
+  if (pointers.size === 0) dragging = false;
+  if (p && e.type === 'pointerup'){
+    var dt = performance.now() - p.t;
+    var dd = Math.hypot(e.clientX - p.x, e.clientY - p.y);
+    if (dt < 260 && dd < 12){ blinkNow(); }
+  }
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+
+/* ============================== 眨眼 & 瞳孔 ============================== */
+var blink = 0, blinkPhase = -1, nextBlink = 2.5;
+var look = { x: 0, y: 0 };
+var lookDirty = 0;
+
+function blinkNow(){ blinkPhase = 0; }
+function repaintFaceFull(){ paintFace(faceParams); }
+
+/* ============================== 动画循环 ============================== */
+var clock = new THREE.Clock();
+var lastT = performance.now();
+
+function animate(){
+  requestAnimationFrame(animate);
+  var now = performance.now();
+  var dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+  var t = now / 1000;
+
+  // 自转
+  if (autoRotate){
+    rotY += dt * 0.22;
+    rotVel = dt * 0.22;
+  } else if (!dragging){
+    rotVel *= 0.9;
+  }
+  charGroup.rotation.y = rotY;
+
+  // 呼吸 + 头摆
+  charGroup.scale.y = 1 + Math.sin(t * 1.5) * 0.0035;
+  headGroup.rotation.z = Math.sin(t * 0.8) * 0.015;
+  headGroup.rotation.x = Math.sin(t * 0.6) * 0.010;
+
+  // 相机（正面固定，角色自转）
+  var focus = 1 - sm(dist, 12, 19);
+  var targetY = lerp(6.4, 9.2, focus);
+  camera.position.set(0, targetY + Math.sin(camPitch) * dist, Math.cos(camPitch) * dist);
+  camera.lookAt(0, targetY, 0);
+
+  // 眨眼
+  if (blinkPhase < 0 && t > nextBlink){ blinkPhase = 0; }
+  if (blinkPhase >= 0){
+    blinkPhase += dt / 0.24;
+    blink = blinkPhase < 0.4 ? blinkPhase / 0.4 : Math.max(0, 1 - (blinkPhase - 0.4) / 0.6);
+    faceParams.blink = blink;
+    repaintFaceFull();
+    if (blinkPhase >= 1){ blinkPhase = -1; blink = 0; faceParams.blink = 0; nextBlink = t + 2.2 + Math.random() * 3.5; repaintFaceFull(); }
+  }
+
+  // 瞳孔追踪相机
+  lookDirty -= dt;
+  var rel = ((rotY % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  var facing = rel > Math.PI ? rel - Math.PI * 2 : rel;
+  var wantX = Math.abs(facing) < 1.2 ? clamp(-facing * 0.8, -1, 1) : 0;
+  var wantY = clamp((camPitch - 0.1) * 1.2, -0.6, 0.6);
+  if (lookDirty <= 0 && (Math.abs(wantX - look.x) > 0.05 || Math.abs(wantY - look.y) > 0.05)){
+    look.x += (wantX - look.x) * 0.5;
+    look.y += (wantY - look.y) * 0.5;
+    faceParams.look = look;
+    repaintFaceFull();
+    lookDirty = 0.12;
+  }
+
+  // 弹簧马尾
+  var spinVel = autoRotate ? 0.22 : 0;
+  for (var i = 0; i < hairSprings.length; i++){
+    var s = hairSprings[i];
+    var drive = -spinVel * 0.35 + Math.sin(t * 1.1 + s.phase) * 0.012;
+    var k = 26, c = 5.5;
+    s.vx += (-k * s.ax - c * s.vx + Math.sin(t * 0.9 + s.phase) * 0.35) * dt;
+    s.vz += (-k * s.az - c * s.vz + drive * 8) * dt;
+    s.ax += s.vx * dt;
+    s.az += s.vz * dt;
+    s.ax = clamp(s.ax, -0.5, 0.5);
+    s.az = clamp(s.az, -0.6, 0.6);
+    s.pivot.rotation.x = s.ax;
+    s.pivot.rotation.z = s.az;
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* ============================== 启动 ============================== */
+var loading = document.getElementById('loading');
+setState('render');
+renderer.render(scene, camera);
+setState('ok');
+setTimeout(function(){ loading.style.opacity = '0'; }, 300);
+setTimeout(function(){ loading.style.display = 'none'; }, 900);
+animate();
+
+/* ============================== snap 模式 ============================== */
+function download(url, name){
+  var a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+if (location.search.indexOf('snap') >= 0){
+  var doSnap = function(){
+    try {
+      autoRotate = false;
+      rotY = 0;
+      blinkPhase = -1; blink = 0; faceParams.blink = 0;
+      faceParams.look = { x: 0, y: 0 };
+      repaintFaceFull();
+      var TS = Date.now().toString().slice(-6);
+      // 1. 全身
+      var focus = 1 - sm(dist, 12, 19);
+      var targetY = lerp(6.4, 9.2, focus);
+      camera.position.set(0, targetY + Math.sin(camPitch) * dist, Math.cos(camPitch) * dist);
+      camera.lookAt(0, targetY, 0);
+      renderer.render(scene, camera);
+      download(canvas.toDataURL('image/png'), 'sister_' + TS + '_full.png');
+      // 2. 脸部特写
+      setTimeout(function(){
+        charGroup.rotation.y = 0;
+        camera.position.set(0.4, 10.2, 8.6);
+        camera.lookAt(0, 9.6, 0);
+        renderer.render(scene, camera);
+        download(canvas.toDataURL('image/png'), 'sister_' + TS + '_face.png');
+        // 3. 侧面
+        setTimeout(function(){
+          charGroup.rotation.y = Math.PI / 2;
+          camera.position.set(0, 10.0, 24);
+          camera.lookAt(0, 6.4, 0);
+          renderer.render(scene, camera);
+          download(canvas.toDataURL('image/png'), 'sister_' + TS + '_side.png');
+          charGroup.rotation.y = rotY;
+          // 4. 脸部贴图本体
+          setTimeout(function(){
+            download(faceCanvas.toDataURL('image/png'), 'sister_' + TS + '_tex.png');
+            setState('snap-done');
+          }, 1400);
+        }, 1400);
+      }, 1400);
+    } catch (err) {
+      showErr('snap fail: ' + err.message);
+    }
+  };
+  setTimeout(doSnap, 2800);
+}
+})();
+</script>
+</body>
+</html>

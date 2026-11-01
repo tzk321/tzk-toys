@@ -1,0 +1,118 @@
+<body>
+<div id="splash"><div class="spSym"><span>∑</span><span>π</span><span>∫</span><span>Ω</span><span>λ</span></div><div class="spTxt"><div class="st1">格 物</div><div class="st3">G E W U</div><div class="st2">数理7天速成 · 全高中</div></div></div>
+<header>
+  <div class="hrow">
+    <div class="hlogo">⚛️</div>
+    <div>
+      <div class="htitle">格物</div>
+      <div class="hsub" id="hdrSub">数理7天速成 · 加载中…</div>
+    </div>
+    <button class="iconbtn" id="themeBtn" title="切换深色">🌙</button>
+  </div>
+</header>
+<main>
+  <section class="tab on" id="tab-home">
+    <div class="card hero">
+      <div class="heroSym"><span>∑</span><span>π</span><span>sin</span><span>Ω</span><span>∫</span><span>λ</span><span>⚛</span><span>√</span></div>
+      <div class="heroInner">
+        <div class="heroTitle">格 物</div>
+        <div class="heroSub">数理7天速成 · 全高中 · 公式 · 考点 · 例题 · 全离线</div>
+        <div class="statsRow" id="homeStats"></div>
+        <div class="progWrap">
+          <div class="progBar"><i id="homeProgBar"></i></div>
+          <div class="progTxt" id="homeProgTxt">学习进度加载中…</div>
+        </div>
+      </div>
+    </div>
+    <div class="secTitle">七天计划</div>
+    <div class="dayGrid" id="dayGrid"></div>
+    <div class="secTitle">使用说明</div>
+    <div class="card">
+      <div class="muted" style="line-height:1.9">
+        ① 每天先点「🧮 记公式」：先自己回忆，点卡片看答案；<br>
+        ② 点「✗ 不认识」→ 先给你看答案，过几题它会被<b>自动拿出来重考</b>（卡片标 🔁），重考答对才算过关；<br>
+        ③ 再看「📐 看讲解」：读考点讲解 + 例题，读完点「已掌握」；<br>
+        ④ 最后去「✍️ 测验」做一轮题，错题看解析；<br>
+        ⑤ 第二天先把前一天的错题（状态筛选「不认识」）过一遍，再学新内容。<br>
+        <span style="color:var(--sub)">进度自动保存在本机，换设备不同步；右上角可切换深色模式。</span>
+      </div>
+    </div>
+    <div class="card">
+      <button class="btn danger" id="resetBtn">清空全部学习进度</button>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-fml">
+    <div class="filters">
+      <div class="frow" id="fDayChips"></div>
+      <div class="frow">
+        <span id="fSubjChips" style="display:flex;gap:7px;flex-wrap:wrap"></span>
+        <button class="chip hf" id="fHotChip">⭐ 高频优先</button>
+      </div>
+      <div class="frow">
+        <button class="chip" id="fMaskChip">遮罩：半遮</button>
+        <button class="chip" id="fBadChip">只看不认识</button>
+        <button class="chip" id="fModeChip">切换列表</button>
+      </div>
+      <div class="frow"><input id="searchBox" placeholder="搜索考点 / 公式…（列表模式用）"></div>
+    </div>
+    <div class="wprog" id="fProg"></div>
+    <div id="cardArea"></div>
+    <div id="listArea" style="display:none"></div>
+  </section>
+
+  <section class="tab" id="tab-les">
+    <div class="frow" id="lDayChips" style="position:sticky;top:58px;z-index:40;background:var(--bg);padding:6px 0 8px"></div>
+    <div class="wprog" id="lProg"></div>
+    <div id="lesArea"></div>
+  </section>
+
+  <section class="tab" id="tab-quiz">
+    <div id="quizHome">
+      <div class="secTitle">开始测验</div>
+      <div class="card">
+        <div class="frow" id="qDayRow"></div>
+        <div class="frow" id="qSubjRow"></div>
+        <div class="frow" id="qTypeRow"></div>
+        <div class="frow" id="qCountRow"></div>
+        <button class="btn" id="startQ">开始测验</button>
+      </div>
+      <div class="secTitle">说明</div>
+      <div class="card">
+        <div class="muted" style="line-height:1.9">选择题点选项直接判对错；填空题输入答案后点「提交」。<br>做完出成绩，错题带解析，可一键重做错题。</div>
+      </div>
+    </div>
+    <div id="quizRun" style="display:none"></div>
+  </section>
+</main>
+<nav>
+  <button data-tab="home" class="on"><span class="ic">🗓️</span>计划</button>
+  <button data-tab="fml"><span class="ic">🧮</span>公式</button>
+  <button data-tab="les"><span class="ic">📐</span>讲解</button>
+  <button data-tab="quiz"><span class="ic">✍️</span>测验</button>
+</nav>
+<div id="toast"></div>
+<script>
+"use strict";
+/* ================= 工具 ================= */
+var LS_KEY="gewu7";
+var S={d:{},load:function(){try{this.d=JSON.parse(localStorage.getItem(LS_KEY)||"{}")}catch(e){this.d={}};if(!this.d.f)this.d.f={};if(!this.d.l)this.d.l={};if(!this.d.q)this.d.q={}},save:function(){try{localStorage.setItem(LS_KEY,JSON.stringify(this.d))}catch(e){}}};
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+var _tt=null;
+function toast(msg){var el=$("toast");el.textContent=msg;el.classList.add("show");if(_tt)clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove("show")},1700)}
+function subjCls(c){return "s"+({数:0,物:1,化:2,生:3}[c]||0)}
+function fmt(s){return String(s).replace(/~/g,"&nbsp;").replace(/\^\{([^}]+)\}/g,"<sup>$1</sup>").replace(/_\{([^}]+)\}/g,"<sub>$1</sub>").replace(/\^([0-9a-zA-Z+\-]+)/g,"<sup>$1</sup>").replace(/_([0-9a-zA-Z+\-]+)/g,"<sub>$1</sub>").replace(/\*/g,"·")}
+function rich(s){return fmt(esc(s))}
+/* 公式文本约定：^ 上标，_ 下标，* 点乘，~ 空格 */
+/* ================= 数据 · 七天 ================= */
+var DAYS=[
+ [1,"数学","函数与导数","集合与逻辑 · 函数性质 · 指对幂 · 导数应用"],
+ [2,"数学","三角·数列·向量","恒等变换 · 解三角形 · 数列 · 向量 · 复数 · 不等式"],
+ [3,"数学","几何·概率统计","立体几何 · 解析几何 · 概率 · 统计"],
+ [4,"物理","力学","直线运动 · 牛顿定律 · 曲线运动 · 万有引力 · 功能动量"],
+ [5,"物理","电磁·热光原","静电场 · 电路 · 磁场 · 电磁感应 · 交变电流 · 热学 · 光 · 原子"],
+ [6,"化学","化学全览","计量 · 氧化还原 · 元素周期 · 反应原理 · 电化学 · 有机 · 实验"],
+ [7,"生物","生物全览","细胞 · 代谢 · 遗传 · 稳态 · 生态"]
+];

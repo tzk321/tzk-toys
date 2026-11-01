@@ -1,0 +1,575 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#04060b"/>
+      <stop offset="0.55" stop-color="#0a121c"/>
+      <stop offset="1" stop-color="#1b2836"/>
+    </linearGradient>
+
+    <linearGradient id="road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2431"/>
+      <stop offset="0.35" stop-color="#0d141d"/>
+      <stop offset="1" stop-color="#05070b"/>
+    </linearGradient>
+
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0e15"/>
+      <stop offset="1" stop-color="#070a10"/>
+    </linearGradient>
+
+    <linearGradient id="storeIn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eafff4"/>
+      <stop offset="0.55" stop-color="#c9ecdd"/>
+      <stop offset="1" stop-color="#8fc3b2"/>
+    </linearGradient>
+
+    <linearGradient id="doorIn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4fffb"/>
+      <stop offset="1" stop-color="#a8d6c6"/>
+    </linearGradient>
+
+    <linearGradient id="spill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d4ffe9" stop-opacity="0.55"/>
+      <stop offset="0.35" stop-color="#aee9d2" stop-opacity="0.26"/>
+      <stop offset="0.7" stop-color="#8fd4bb" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#7bbfa8" stop-opacity="0.02"/>
+    </linearGradient>
+
+    <linearGradient id="refl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9ffe6" stop-opacity="0.55"/>
+      <stop offset="0.5" stop-color="#8fd8c0" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#6fb8a2" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="lampCone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd9a4" stop-opacity="0.28"/>
+      <stop offset="0.6" stop-color="#ffca88" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#ffbe78" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="neonG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff4d8f"/>
+      <stop offset="1" stop-color="#c92f6b"/>
+    </linearGradient>
+
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe0b0" stop-opacity="0.55"/>
+      <stop offset="0.4" stop-color="#ffca88" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#ffca88" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="storeHalo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#b8ffe6" stop-opacity="0.30"/>
+      <stop offset="0.5" stop-color="#8fdfc6" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#8fdfc6" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="vig" cx="0.5" cy="0.48" r="0.72">
+      <stop offset="0.55" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.85" stop-color="#000000" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.78"/>
+    </radialGradient>
+
+    <filter id="b2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>
+    <filter id="b5" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+    <filter id="b10" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="b24" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="24"/></filter>
+
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0"/>
+    </filter>
+
+    <pattern id="rainA" width="170" height="240" patternUnits="userSpaceOnUse" patternTransform="rotate(15)">
+      <path d="M18 -10 L8 46" stroke="#d6e8ff" stroke-width="1.05" opacity="0.55"/>
+      <path d="M82 66 L72 128" stroke="#d6e8ff" stroke-width="0.9" opacity="0.4"/>
+      <path d="M136 22 L126 92" stroke="#d6e8ff" stroke-width="1.15" opacity="0.5"/>
+      <path d="M52 150 L42 206" stroke="#d6e8ff" stroke-width="0.85" opacity="0.35"/>
+      <path d="M112 168 L102 226" stroke="#d6e8ff" stroke-width="1" opacity="0.45"/>
+      <path d="M158 140 L150 186" stroke="#d6e8ff" stroke-width="0.8" opacity="0.3"/>
+    </pattern>
+
+    <pattern id="rainB" width="310" height="380" patternUnits="userSpaceOnUse" patternTransform="rotate(11)">
+      <path d="M40 10 L18 120" stroke="#e6f2ff" stroke-width="1.6" opacity="0.28"/>
+      <path d="M190 90 L168 214" stroke="#e6f2ff" stroke-width="1.9" opacity="0.22"/>
+      <path d="M262 250 L242 352" stroke="#e6f2ff" stroke-width="1.4" opacity="0.2"/>
+      <path d="M96 300 L78 380" stroke="#e6f2ff" stroke-width="1.5" opacity="0.18"/>
+    </pattern>
+  </defs>
+
+  <!-- SKY -->
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <!-- 云层微光 -->
+  <ellipse cx="760" cy="240" rx="420" ry="120" fill="#2b3c52" opacity="0.18" filter="url(#b24)"/>
+  <ellipse cx="1060" cy="340" rx="280" ry="90" fill="#33465e" opacity="0.14" filter="url(#b24)"/>
+  <ellipse cx="260" cy="200" rx="300" ry="110" fill="#1c2a3c" opacity="0.5" filter="url(#b24)"/>
+
+  <!-- 远处楼群 -->
+  <g fill="#080d15">
+    <rect x="-10" y="372" width="132" height="160"/>
+    <rect x="130" y="330" width="86" height="210"/>
+    <rect x="222" y="390" width="74" height="150"/>
+    <rect x="302" y="346" width="88" height="200"/>
+    <rect x="396" y="404" width="86" height="140"/>
+    <rect x="488" y="356" width="78" height="190"/>
+    <rect x="572" y="396" width="92" height="150"/>
+    <rect x="668" y="312" width="104" height="240"/>
+    <rect x="778" y="374" width="78" height="180"/>
+    <rect x="862" y="334" width="92" height="220"/>
+    <rect x="960" y="366" width="86" height="190"/>
+    <rect x="1052" y="302" width="96" height="260"/>
+    <rect x="1154" y="352" width="60" height="210"/>
+  </g>
+  <g fill="#0d141f">
+    <rect x="668" y="282" width="16" height="34"/>
+    <rect x="1080" y="272" width="6" height="34"/>
+    <path d="M714 312 L714 286 L740 286 L740 312" />
+  </g>
+  <!-- 远窗 -->
+  <g fill="#ffd9a0" opacity="0.5">
+    <rect x="150" y="352" width="7" height="9"/><rect x="168" y="378" width="7" height="9"/>
+    <rect x="318" y="368" width="6" height="8"/><rect x="338" y="392" width="6" height="8"/>
+    <rect x="502" y="380" width="7" height="9"/><rect x="524" y="410" width="7" height="9"/>
+    <rect x="690" y="340" width="8" height="10"/><rect x="712" y="368" width="8" height="10"/>
+    <rect x="730" y="336" width="8" height="10"/>
+    <rect x="882" y="358" width="6" height="8"/><rect x="902" y="384" width="6" height="8"/>
+    <rect x="1074" y="330" width="8" height="10"/><rect x="1100" y="360" width="8" height="10"/>
+  </g>
+  <g fill="#9fd8ff" opacity="0.28">
+    <rect x="246" y="410" width="5" height="7"/><rect x="604" y="418" width="5" height="7"/>
+    <rect x="936" y="388" width="5" height="7"/><rect x="988" y="412" width="5" height="7"/>
+    <rect x="1168" y="378" width="5" height="7"/><rect x="104" y="398" width="5" height="7"/>
+  </g>
+
+  <!-- 电线 -->
+  <g fill="none" stroke="#05080d" stroke-width="1.6" opacity="0.85">
+    <path d="M-20 246 C 260 306, 620 220, 1220 268"/>
+    <path d="M-20 262 C 270 322, 630 238, 1220 286"/>
+  </g>
+  <g fill="none" stroke="#3c556e" stroke-width="0.7" opacity="0.35">
+    <path d="M-20 246 C 260 306, 620 220, 1220 268"/>
+  </g>
+
+  <!-- 街面 -->
+  <rect x="0" y="500" width="1200" height="300" fill="url(#road)"/>
+  <g stroke="#7f9ab3" stroke-width="1" opacity="0.07">
+    <path d="M0 540 H1200"/><path d="M0 596 H1200"/><path d="M0 672 H1200"/>
+    <path d="M0 748 H1200"/>
+  </g>
+
+  <!-- 左侧楼体 -->
+  <rect x="0" y="150" width="452" height="430" fill="url(#wall)"/>
+  <rect x="0" y="150" width="452" height="6" fill="#141a24"/>
+  <g fill="#0c111a" stroke="#161e2a" stroke-width="1">
+    <rect x="24" y="176" width="86" height="58"/>
+    <rect x="132" y="176" width="86" height="58"/>
+    <rect x="240" y="176" width="86" height="58"/>
+    <rect x="348" y="176" width="86" height="58"/>
+  </g>
+  <g fill="#1d2735" opacity="0.7">
+    <rect x="30" y="182" width="74" height="46"/>
+    <rect x="138" y="182" width="74" height="46"/>
+    <rect x="246" y="182" width="74" height="46"/>
+    <rect x="354" y="182" width="74" height="46"/>
+  </g>
+
+  <!-- 店面光晕 -->
+  <ellipse cx="240" cy="430" rx="330" ry="250" fill="url(#storeHalo)"/>
+
+  <!-- 店面开口 -->
+  <rect x="52" y="292" width="368" height="266" fill="#02050a"/>
+  <rect x="60" y="300" width="352" height="250" fill="url(#storeIn)" opacity="0.93"/>
+
+  <!-- 店内货架 -->
+  <g opacity="0.62">
+    <rect x="68" y="336" width="250" height="5" fill="#6f9c8c"/>
+    <rect x="68" y="398" width="250" height="5" fill="#6f9c8c"/>
+    <rect x="68" y="460" width="250" height="5" fill="#6f9c8c"/>
+    <g fill="#e2645c"><rect x="76" y="352" width="9" height="16"/><rect x="92" y="356" width="9" height="12"/><rect x="150" y="350" width="10" height="18"/></g>
+    <g fill="#e6b855"><rect x="110" y="358" width="9" height="10"/><rect x="126" y="352" width="9" height="16"/><rect x="210" y="356" width="10" height="12"/></g>
+    <g fill="#4d9dbd"><rect x="172" y="356" width="9" height="12"/><rect x="190" y="350" width="9" height="18"/><rect x="236" y="354" width="10" height="14"/></g>
+    <g fill="#e2645c" opacity="0.8"><rect x="84" y="414" width="9" height="14"/><rect x="142" y="418" width="9" height="10"/><rect x="200" y="412" width="10" height="16"/></g>
+    <g fill="#e6b855" opacity="0.8"><rect x="118" y="420" width="9" height="8"/><rect x="176" y="414" width="9" height="14"/><rect x="240" y="418" width="9" height="10"/></g>
+  </g>
+  <!-- 店内吊灯 -->
+  <g>
+    <rect x="112" y="311" width="44" height="4" rx="2" fill="#fffdf0" opacity="0.95"/>
+    <ellipse cx="134" cy="322" rx="44" ry="20" fill="#fff6d8" opacity="0.35" filter="url(#b10)"/>
+    <rect x="232" y="311" width="38" height="4" rx="2" fill="#fffdf0" opacity="0.9"/>
+    <ellipse cx="251" cy="322" rx="38" ry="18" fill="#fff6d8" opacity="0.3" filter="url(#b10)"/>
+  </g>
+
+  <!-- 冷柜 -->
+  <g>
+    <rect x="322" y="330" width="80" height="196" rx="3" fill="#d9f2f4" opacity="0.75"/>
+    <g stroke="#9ccdd2" stroke-width="2" opacity="0.8">
+      <path d="M336 334 V520"/><path d="M352 334 V520"/><path d="M368 334 V520"/><path d="M384 334 V520"/>
+    </g>
+    <rect x="322" y="330" width="80" height="196" rx="3" fill="none" stroke="#6ba7ae" stroke-width="2" opacity="0.7"/>
+  </g>
+  <!-- 夜班店员剪影 -->
+  <g opacity="0.9">
+    <circle cx="144" cy="446" r="13" fill="#37685a"/>
+    <path d="M120 500 q0 -32 24 -32 q24 0 24 32 Z" fill="#316050"/>
+    <path d="M132 430 q12 -8 24 0" stroke="#2a5547" stroke-width="3" fill="none"/>
+  </g>
+
+  <!-- 收银台剪影 -->
+  <rect x="68" y="498" width="120" height="52" fill="#7ba99a" opacity="0.75"/>
+  <rect x="74" y="486" width="34" height="14" rx="2" fill="#5f8e80" opacity="0.8"/>
+  <!-- 门框 -->
+  <g fill="#0a0f16">
+    <rect x="292" y="300" width="7" height="250"/>
+    <rect x="60" y="300" width="5" height="250"/>
+    <rect x="408" y="300" width="6" height="250"/>
+  </g>
+  <!-- 玻璃门高光 -->
+  <path d="M300 306 L336 306 L312 544 L300 544 Z" fill="#ffffff" opacity="0.10"/>
+  <path d="M200 308 L224 308 L206 542 L194 542 Z" fill="#ffffff" opacity="0.06"/>
+
+  <!-- 玻璃上的促销海报 -->
+  <g transform="rotate(-2 344 384)">
+    <rect x="326" y="356" width="44" height="58" fill="#fff8e6" opacity="0.72"/>
+    <rect x="332" y="366" width="32" height="4" fill="#d95b52" opacity="0.8"/>
+    <rect x="332" y="376" width="26" height="3" fill="#6b8f86" opacity="0.65"/>
+    <rect x="332" y="384" width="30" height="3" fill="#6b8f86" opacity="0.55"/>
+    <rect x="332" y="398" width="20" height="8" fill="#e2a33f" opacity="0.7"/>
+    <rect x="356" y="398" width="10" height="8" fill="#6b8f86" opacity="0.4"/>
+  </g>
+
+  <!-- 招牌 -->
+  <rect x="52" y="248" width="368" height="46" rx="3" fill="#071c20"/>
+  <rect x="52" y="248" width="368" height="46" rx="3" fill="none" stroke="#39e0d0" stroke-width="1.2" opacity="0.45"/>
+  <path d="M58 292 H414" stroke="#d9fff5" stroke-width="2.6" opacity="0.5" filter="url(#b2)"/>
+  <path d="M58 292 H414" stroke="#ffffff" stroke-width="1" opacity="0.75"/>
+  <g filter="url(#b5)" opacity="0.85">
+    <text x="74" y="283" font-family="monospace" font-size="30" font-weight="bold" fill="#8ffff0" letter-spacing="3">24H</text>
+    <text x="300" y="279" font-family="monospace" font-size="12" fill="#ffcf8a" letter-spacing="4">MART</text>
+  </g>
+  <text x="74" y="283" font-family="monospace" font-size="30" font-weight="bold" fill="#d8fff9" letter-spacing="3">24H</text>
+  <text x="300" y="279" font-family="monospace" font-size="12" fill="#ffdca8" letter-spacing="4">MART</text>
+  <circle cx="62" cy="271" r="3" fill="#ff4d6d" filter="url(#b2)"/>
+
+  <!-- 门口台阶与杂物 -->
+  <rect x="44" y="550" width="392" height="14" fill="#0a0e14"/>
+  <path d="M44 550 H436" stroke="#4e7a6c" stroke-width="1" opacity="0.45"/>
+
+  <!-- 人行道砖缝 -->
+  <g stroke="#5f8f80" stroke-width="1" opacity="0.09">
+    <path d="M56 584 H452"/><path d="M50 608 H452"/><path d="M40 632 H452"/>
+    <path d="M96 566 V640"/><path d="M176 566 V638"/><path d="M256 566 V636"/><path d="M336 566 V634"/>
+  </g>
+
+  <!-- 路缘石 -->
+  <path d="M436 646 L1200 632" stroke="#2f4049" stroke-width="9" opacity="0.85"/>
+  <path d="M436 641 L1200 627" stroke="#8fb8a9" stroke-width="1.3" opacity="0.32"/>
+  <path d="M436 651 L1200 637 L1200 652 L436 666 Z" fill="#060a0f"/>
+
+  <!-- 路缘杂草 -->
+  <g stroke="#05090d" stroke-width="1.6" fill="none" stroke-linecap="round">
+    <path d="M652 650 q-2 -16 -9 -23"/><path d="M657 650 q1 -19 5 -27"/>
+    <path d="M662 650 q6 -13 15 -18"/><path d="M667 650 q9 -9 19 -11"/>
+  </g>
+  <g stroke="#9fe8d2" stroke-width="0.8" fill="none" opacity="0.28" stroke-linecap="round">
+    <path d="M657 650 q1 -19 5 -27"/><path d="M662 650 q6 -13 15 -18"/>
+  </g>
+
+  <!-- 塑料瓶与纸屑 -->
+  <g opacity="0.5" fill="#a9d8c9">
+    <rect x="604" y="660" width="3" height="10" rx="1.5"/><rect x="690" y="676" width="7" height="2"/>
+    <rect x="528" y="654" width="5" height="2" opacity="0.7"/>
+  </g>
+
+  <!-- 停在路边的单车 -->
+  <g stroke="#05080c" stroke-width="2.4" fill="none" stroke-linecap="round">
+    <circle cx="716" cy="664" r="16"/>
+    <circle cx="770" cy="664" r="16"/>
+    <path d="M716 664 L736 638 L756 638 L770 664"/>
+    <path d="M736 638 L740 620 L750 620"/>
+    <path d="M756 638 L763 619 L772 621"/>
+    <path d="M716 664 L740 662"/>
+  </g>
+  <g stroke="#05080c" stroke-width="2" fill="none">
+    <path d="M736 638 L740 662 L770 664"/>
+    <path d="M700 680 L708 672"/>
+  </g>
+
+  <!-- 灯柱下的纸箱 -->
+  <g fill="#070b10">
+    <path d="M836 662 h30 v22 h-30 Z"/>
+    <path d="M836 662 l6 -6 h24 l-6 6 Z" fill="#0a0f16"/>
+  </g>
+  <path d="M836 663 h30" stroke="#7fc6b2" stroke-width="1" opacity="0.25"/>
+  <!-- 箱子 -->
+  <g>
+    <rect x="96" y="556" width="58" height="40" rx="2" fill="#070b10"/>
+    <path d="M96 560 H154" stroke="#7fd8bd" stroke-width="1" opacity="0.35"/>
+    <path d="M108 556 V596" stroke="#05080c" stroke-width="2"/>
+  </g>
+  <!-- 垃圾桶 -->
+  <g>
+    <path d="M180 556 h40 l-4 58 h-32 Z" fill="#060a0f"/>
+    <rect x="176" y="550" width="48" height="7" rx="2" fill="#0a1018"/>
+    <path d="M180 558 v54" stroke="#6ec4ab" stroke-width="1" opacity="0.28"/>
+  </g>
+  <!-- 拖把/伞 -->
+  <path d="M250 556 L268 500" stroke="#05090e" stroke-width="3"/>
+  <path d="M262 512 q10 -12 6 -26" stroke="#05090e" stroke-width="2" fill="none"/>
+
+  <!-- 地面光溢 -->
+  <path d="M52 564 L436 564 L900 800 L-40 800 Z" fill="url(#spill)"/>
+  <ellipse cx="240" cy="700" rx="300" ry="90" fill="#a7e6d1" opacity="0.05" filter="url(#b24)"/>
+  <ellipse cx="430" cy="690" rx="230" ry="52" fill="#c9ffe6" opacity="0.07" filter="url(#b24)"/>
+  <ellipse cx="510" cy="700" rx="150" ry="30" fill="#e2fff2" opacity="0.05" filter="url(#b24)"/>
+  <!-- 轮胎水痕 -->
+  <g stroke="#bfe9dd" fill="none" opacity="0.05" filter="url(#b5)">
+    <path d="M180 800 C 320 700, 520 660, 900 640" stroke-width="7"/>
+    <path d="M240 800 C 380 716, 560 682, 980 664" stroke-width="4"/>
+  </g>
+
+  <!-- 湿地反光 -->
+  <g filter="url(#b10)" opacity="0.5">
+    <rect x="76" y="566" width="60" height="200" fill="url(#refl)"/>
+    <rect x="150" y="566" width="34" height="150" fill="url(#refl)" opacity="0.8"/>
+    <rect x="230" y="566" width="90" height="240" fill="url(#refl)" opacity="0.9"/>
+    <rect x="330" y="566" width="46" height="170" fill="url(#refl)" opacity="0.65"/>
+  </g>
+  <g stroke="#bfffe9" stroke-width="2" opacity="0.12" filter="url(#b2)">
+    <path d="M70 606 H380"/><path d="M40 636 H420"/><path d="M20 676 H470"/><path d="M-10 720 H500"/>
+  </g>
+
+  <!-- 水洼 -->
+  <ellipse cx="470" cy="712" rx="160" ry="34" fill="#0a1219" opacity="0.9"/>
+  <ellipse cx="470" cy="710" rx="150" ry="28" fill="#16313a" opacity="0.55"/>
+  <ellipse cx="420" cy="704" rx="60" ry="9" fill="#7fe3c6" opacity="0.16" filter="url(#b5)"/>
+  <ellipse cx="520" cy="716" rx="46" ry="6" fill="#ffcf8a" opacity="0.07" filter="url(#b5)"/>
+  <g stroke="#9ff0d8" stroke-width="1" opacity="0.18">
+    <path d="M360 708 q40 -6 80 0"/><path d="M430 720 q50 -6 96 0"/>
+  </g>
+  <!-- 雨点涟漪 -->
+  <g fill="none" stroke="#c9fff0">
+    <ellipse cx="404" cy="712" rx="18" ry="4" stroke-width="1.2" opacity="0.22"/>
+    <ellipse cx="436" cy="722" rx="26" ry="5" stroke-width="1" opacity="0.13"/>
+    <ellipse cx="530" cy="720" rx="14" ry="3" stroke-width="1.1" opacity="0.18"/>
+  </g>
+  <g fill="#e8fff8">
+    <circle cx="404" cy="711" r="1.2" opacity="0.25"/><circle cx="530" cy="719" r="1" opacity="0.2"/>
+  </g>
+  <!-- 狗爪印 -->
+  <g fill="#081114" opacity="0.32" filter="url(#b2)">
+    <ellipse cx="306" cy="744" rx="7" ry="4" transform="rotate(-14 306 744)"/>
+    <ellipse cx="322" cy="728" rx="7" ry="4" transform="rotate(-12 322 728)"/>
+    <ellipse cx="350" cy="726" rx="7" ry="4" transform="rotate(-10 350 726)"/>
+    <ellipse cx="366" cy="710" rx="7" ry="4" transform="rotate(-8 366 710)"/>
+    <ellipse cx="394" cy="708" rx="7" ry="4" transform="rotate(-8 394 708)"/>
+    <ellipse cx="410" cy="694" rx="7" ry="4" transform="rotate(-6 410 694)"/>
+    <ellipse cx="436" cy="690" rx="7" ry="4" transform="rotate(-6 436 690)"/>
+  </g>
+
+  <!-- 井盖 -->
+  <ellipse cx="800" cy="742" rx="52" ry="14" fill="#05080c"/>
+  <ellipse cx="800" cy="742" rx="52" ry="14" fill="none" stroke="#4b5f70" stroke-width="1" opacity="0.3"/>
+
+  <!-- 右侧高楼与灯柱 -->
+  <g>
+    <rect x="958" y="96" width="242" height="524" fill="#070b11"/>
+    <rect x="958" y="96" width="8" height="524" fill="#101722"/>
+    <g fill="#0d131c" stroke="#141c28" stroke-width="0.8">
+      <rect x="982" y="130" width="60" height="74"/><rect x="1054" y="130" width="60" height="74"/>
+      <rect x="1126" y="130" width="60" height="74"/>
+      <rect x="982" y="232" width="60" height="74"/><rect x="1054" y="232" width="60" height="74"/>
+      <rect x="1126" y="232" width="60" height="74"/>
+      <rect x="982" y="334" width="60" height="74"/><rect x="1054" y="334" width="60" height="74"/>
+      <rect x="1126" y="334" width="60" height="74"/>
+    </g>
+    <g fill="#ffd9a0" opacity="0.4">
+      <rect x="1000" y="150" width="9" height="12"/><rect x="1128" y="258" width="9" height="12"/>
+    </g>
+    <g fill="#9fd8ff" opacity="0.22">
+      <rect x="1074" y="352" width="9" height="12"/><rect x="1146" y="156" width="9" height="12"/>
+    </g>
+
+    <!-- 楼底卷帘门 -->
+    <rect x="970" y="512" width="200" height="108" fill="#080c12"/>
+    <g stroke="#131b25" stroke-width="1.4">
+      <path d="M970 524 H1170"/><path d="M970 536 H1170"/><path d="M970 548 H1170"/>
+      <path d="M970 560 H1170"/><path d="M970 572 H1170"/><path d="M970 584 H1170"/>
+      <path d="M970 596 H1170"/><path d="M970 608 H1170"/>
+    </g>
+    <path d="M970 512 H1170" stroke="#31414d" stroke-width="1.2" opacity="0.45"/>
+    <rect x="1012" y="536" width="10" height="14" fill="#3a2b28" opacity="0.65"/>
+    <rect x="1044" y="540" width="14" height="10" fill="#2a3448" opacity="0.55"/>
+    <rect x="1122" y="564" width="12" height="16" fill="#3a2b28" opacity="0.4"/>
+
+    <!-- 排水管 -->
+    <path d="M962 300 V620" stroke="#0a0f16" stroke-width="4"/>
+    <path d="M958 300 V620" stroke="#2a3a44" stroke-width="1" opacity="0.45"/>
+    <path d="M958 360 h8 M958 440 h8 M958 520 h8" stroke="#0a0f16" stroke-width="2"/>
+    <path d="M962 620 q0 9 0 13" stroke="#9fdfc9" stroke-width="1" opacity="0.18"/>
+
+    <!-- 空调外机 -->
+    <g fill="#0a0f17" stroke="#1b2432" stroke-width="1">
+      <rect x="986" y="212" width="34" height="26" rx="2"/>
+      <rect x="1128" y="212" width="34" height="26" rx="2"/>
+      <rect x="1058" y="314" width="34" height="26" rx="2"/>
+    </g>
+    <g stroke="#24303d" stroke-width="1" fill="none">
+      <circle cx="1003" cy="225" r="9"/><circle cx="1145" cy="225" r="9"/><circle cx="1075" cy="327" r="9"/>
+    </g>
+
+    <!-- 楼顶水箱 -->
+    <g fill="#070b11" stroke="#1a2330" stroke-width="1">
+      <rect x="1104" y="66" width="52" height="28" rx="3"/>
+      <path d="M1110 94 V108 M1150 94 V108"/>
+      <path d="M1104 66 q26 -14 52 0" fill="none"/>
+    </g>
+    <circle cx="1186" cy="96" r="3.2" fill="#ff3b4e" filter="url(#b2)"/>
+    <circle cx="1186" cy="96" r="1.6" fill="#ffb3bb"/>
+  </g>
+
+  <!-- 竖向霓虹 -->
+  <g>
+    <path d="M958 236 H940 M958 404 H940" stroke="#0a0e14" stroke-width="4"/>
+    <rect x="926" y="220" width="34" height="200" rx="4" fill="#120814"/>
+    <rect x="926" y="220" width="34" height="200" rx="4" fill="none" stroke="#ff4d8f" stroke-width="1.4" opacity="0.5"/>
+    <g filter="url(#b5)" opacity="0.75" fill="#ff9ec4" font-family="monospace" font-size="15">
+      <text x="936" y="256">N</text>
+      <text x="936" y="286">I</text>
+      <text x="936" y="316">G</text>
+      <text x="936" y="346">H</text>
+      <text x="936" y="376">T</text>
+    </g>
+    <g fill="#ffd2e2" font-family="monospace" font-size="15">
+      <text x="936" y="256">N</text>
+      <text x="936" y="286">I</text>
+      <text x="936" y="316">G</text>
+      <text x="936" y="346">H</text>
+      <text x="936" y="376">T</text>
+    </g>
+    <ellipse cx="943" cy="320" rx="72" ry="150" fill="#ff4d8f" opacity="0.07" filter="url(#b24)"/>
+  </g>
+
+  <!-- 路灯 -->
+  <g>
+    <path d="M876 664 L884 664 L882 190 L874 190 Z" fill="#04070b"/>
+    <path d="M879 196 C 856 186, 830 182, 806 186" stroke="#04070b" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <rect x="778" y="180" width="42" height="11" rx="5" fill="#05080c" transform="rotate(-6 799 186)"/>
+    <ellipse cx="797" cy="192" rx="19" ry="7" fill="#ffe8c4"/>
+    <ellipse cx="797" cy="194" rx="120" ry="110" fill="url(#halo)"/>
+    <path d="M782 198 L814 198 L900 668 L700 668 Z" fill="url(#lampCone)"/>
+    <ellipse cx="800" cy="664" rx="118" ry="24" fill="#ffcf9a" opacity="0.10" filter="url(#b10)"/>
+    <ellipse cx="800" cy="664" rx="64" ry="12" fill="#ffe0b4" opacity="0.10" filter="url(#b5)"/>
+  </g>
+
+  <!-- 远处红绿灯 -->
+  <g>
+    <rect x="690" y="430" width="4" height="90" fill="#05090e"/>
+    <rect x="680" y="404" width="24" height="34" rx="4" fill="#080d14"/>
+    <circle cx="692" cy="414" r="4" fill="#ff3b4e" filter="url(#b2)"/>
+    <circle cx="692" cy="414" r="2.4" fill="#ff9aa6"/>
+  </g>
+
+  <!-- 飞虫 -->
+  <g fill="#eaffd8">
+    <circle cx="742" cy="238" r="1.5" opacity="0.8" filter="url(#b2)"/>
+    <circle cx="768" cy="262" r="1.1" opacity="0.55"/>
+    <circle cx="716" cy="272" r="0.9" opacity="0.45"/>
+    <circle cx="792" cy="226" r="1.2" opacity="0.6"/>
+    <circle cx="166" cy="300" r="1.2" opacity="0.55" filter="url(#b2)"/>
+    <circle cx="192" cy="286" r="0.9" opacity="0.4"/>
+  </g>
+
+  <!-- 蒸汽 -->
+  <g stroke="#cfe6ff" stroke-width="9" fill="none" opacity="0.07" filter="url(#b10)" stroke-linecap="round">
+    <path d="M636 676 c 18 -30, -8 -48, 12 -78"/>
+    <path d="M654 682 c 14 -24, -6 -42, 10 -66"/>
+    <path d="M118 760 c 20 -26, -6 -44, 10 -70"/>
+  </g>
+
+  <!-- 野狗 -->
+  <g>
+    <!-- 地面阴影 -->
+    <ellipse cx="596" cy="702" rx="120" ry="12" fill="#000000" opacity="0.35" filter="url(#b10)" transform="rotate(4 596 702)"/>
+    <ellipse cx="452" cy="697" rx="80" ry="10" fill="#000000" opacity="0.6" filter="url(#b5)"/>
+    <!-- 水面倒影 -->
+    <g transform="translate(370 763) scale(1.05 -0.5)" opacity="0.18" filter="url(#b2)">
+      <g fill="#d8fff0">
+        <ellipse cx="78" cy="72" rx="48" ry="22" transform="rotate(-4 78 72)"/>
+        <ellipse cx="120" cy="72" rx="20" ry="21"/>
+        <path d="M116 50 L140 34 L152 54 L130 70 Z"/>
+        <ellipse cx="150" cy="36" rx="13" ry="12" transform="rotate(8 150 36)"/>
+        <path d="M158 28 L180 36 L178 44 L157 44 Z"/>
+        <path d="M141 27 L133 2 L150 22 Z"/>
+        <path d="M150 23 L148 0 L161 22 Z"/>
+        <path d="M34 58 C 16 60, 4 74, -2 96 C 2 74, 10 66, 30 68 Z"/>
+      </g>
+      <g stroke="#d8fff0" stroke-linecap="round" fill="none">
+        <g stroke-width="8"><path d="M56 86 L48 114 L54 136"/><path d="M118 88 L114 116 L124 136"/></g>
+        <g stroke-width="7"><path d="M42 84 L32 110 L22 136"/><path d="M104 88 L100 114 L108 136"/></g>
+      </g>
+    </g>
+
+    <g transform="translate(370 552) scale(1.05)">
+      <!-- 背光边 -->
+      <g fill="#d6fff0" opacity="0.72" transform="translate(-4 -3)">
+        <ellipse cx="78" cy="72" rx="48" ry="22" transform="rotate(-4 78 72)"/>
+        <ellipse cx="120" cy="72" rx="20" ry="21"/>
+        <path d="M116 50 L140 34 L152 54 L130 70 Z"/>
+        <ellipse cx="150" cy="36" rx="13" ry="12" transform="rotate(8 150 36)"/>
+        <path d="M158 28 L180 36 L178 44 L157 44 Z"/>
+        <path d="M141 27 L133 2 L150 22 Z"/>
+        <path d="M150 23 L148 0 L161 22 Z"/>
+        <path d="M34 58 C 16 60, 4 74, -2 96 C 2 74, 10 66, 30 68 Z"/>
+      </g>
+      <g stroke="#d6fff0" stroke-linecap="round" fill="none" opacity="0.6" transform="translate(-4 -3)">
+        <g stroke-width="8"><path d="M56 86 L48 114 L54 136"/><path d="M118 88 L114 116 L124 136"/></g>
+        <g stroke-width="7"><path d="M42 84 L32 110 L22 136"/><path d="M104 88 L100 114 L108 136"/></g>
+      </g>
+
+      <!-- 本体 -->
+      <g fill="#04060a">
+        <ellipse cx="78" cy="72" rx="48" ry="22" transform="rotate(-4 78 72)"/>
+        <ellipse cx="120" cy="72" rx="20" ry="21"/>
+        <path d="M116 50 L140 34 L152 54 L130 70 Z"/>
+        <ellipse cx="150" cy="36" rx="13" ry="12" transform="rotate(8 150 36)"/>
+        <path d="M158 28 L180 36 L178 44 L157 44 Z"/>
+        <path d="M141 27 L133 2 L150 22 Z"/>
+        <path d="M150 23 L148 0 L161 22 Z"/>
+        <path d="M34 58 C 16 60, 4 74, -2 96 C 2 74, 10 66, 30 68 Z"/>
+      </g>
+      <g stroke="#04060a" stroke-linecap="round" fill="none">
+        <g stroke-width="8"><path d="M56 86 L48 114 L54 136"/><path d="M118 88 L114 116 L124 136"/></g>
+        <g stroke-width="7"><path d="M42 84 L32 110 L22 136"/><path d="M104 88 L100 114 L108 136"/></g>
+      </g>
+      <!-- 旧项圈 -->
+      <path d="M130 52 Q140 60 152 64" stroke="#8a3038" stroke-width="3.6" fill="none" stroke-linecap="round" opacity="0.9"/>
+      <path d="M131 50 Q141 58 152 62" stroke="#e08a8a" stroke-width="1" fill="none" opacity="0.55" stroke-linecap="round"/>
+      <!-- 眼点反光 -->
+      <circle cx="156" cy="33" r="1.5" fill="#ffe9b8" opacity="0.9"/>
+    </g>
+
+    <!-- 鼻息白气 -->
+    <g stroke="#dff6ff" fill="none" stroke-linecap="round" opacity="0.12" filter="url(#b5)">
+      <path d="M566 596 q16 -8 30 -3" stroke-width="6"/>
+      <path d="M570 603 q22 -5 36 -13" stroke-width="4"/>
+    </g>
+  </g>
+
+  <!-- 雨 -->
+  <rect width="1200" height="800" fill="url(#rainA)" opacity="0.5"/>
+  <rect width="1200" height="800" fill="url(#rainB)" opacity="0.5"/>
+  <g stroke="#eaf4ff" stroke-width="1.4" opacity="0.16" filter="url(#b2)">
+    <path d="M120 -20 L40 300"/><path d="M430 -20 L350 300"/>
+    <path d="M760 -20 L680 300"/><path d="M1010 -20 L930 300"/>
+  </g>
+
+  <!-- 薄雾 -->
+  <ellipse cx="880" cy="600" rx="360" ry="70" fill="#9ec8ff" opacity="0.045" filter="url(#b24)"/>
+  <ellipse cx="300" cy="660" rx="300" ry="60" fill="#bfffe8" opacity="0.05" filter="url(#b24)"/>
+
+  <!-- 暗角 + 颗粒 -->
+  <text x="1150" y="778" font-family="monospace" font-size="15" fill="#9fe8d2" opacity="0.22" text-anchor="end" letter-spacing="2">tzk</text>
+
+  <rect width="1200" height="800" fill="url(#vig)"/>
+  <rect width="1200" height="800" filter="url(#grain)" opacity="0.05" style="mix-blend-mode:overlay"/>
+</svg>
